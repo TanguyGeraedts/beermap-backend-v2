@@ -2,6 +2,7 @@ package be.tanguy.beermap.api.users.repository;
 
 import be.tanguy.beermap.api.users.domain.AuthIdentity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -10,5 +11,6 @@ import java.util.UUID;
 @Repository
 public interface AuthIdentityRepository extends JpaRepository<AuthIdentity, UUID> {
 
+    @Query("SELECT a FROM AuthIdentity a JOIN FETCH a.userProfile WHERE a.issuer = :issuer AND a.subject = :subject")
     Optional<AuthIdentity> findByIssuerAndSubject(String issuer, String subject);
 }

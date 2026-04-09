@@ -1,13 +1,8 @@
 package be.tanguy.beermap.api.users.service;
 
-import be.tanguy.beermap.api.users.domain.AccountType;
-import be.tanguy.beermap.api.users.domain.AuthIdentity;
-import be.tanguy.beermap.api.users.domain.UserProfile;
-import be.tanguy.beermap.api.users.domain.UserProfileInfo;
-import be.tanguy.beermap.api.users.exception.CurrentUserNotFoundException;
-import be.tanguy.beermap.api.users.exception.InvalidDiscriminatorException;
-import be.tanguy.beermap.api.users.exception.UserProfileNotFoundException;
-import be.tanguy.beermap.api.users.exception.UsernameDiscriminatorAlreadyTakenException;
+import be.tanguy.beermap.api.common.security.UserIdentity;
+import be.tanguy.beermap.api.users.domain.*;
+import be.tanguy.beermap.api.users.exception.*;
 import be.tanguy.beermap.api.users.repository.AuthIdentityRepository;
 import be.tanguy.beermap.api.users.repository.UserProfileRepository;
 import lombok.RequiredArgsConstructor;
@@ -30,31 +25,61 @@ public class UserProfileServiceImpl implements UserProfileService {
 
     @Override
     @Transactional
-    public UserProfile getOrCreateUser(String issuer, String subject) {
-        return authIdentityRepository.findByIssuerAndSubject(issuer, subject)
-                .map(AuthIdentity::getUserProfile)
-                .orElseGet(() -> createNewUser(issuer, subject));
+    public UserProfile createUser(
+            UserIdentity userIdentity,
+            String username,
+            String bio,
+            String avatarUrl
+    ) {
+        if (authIdentityRepository.findByIssuerAndSubject(
+                userIdentity.issuer(),
+                userIdentity.subject())
+                .isPresent())
+        {
+            throw new ProfileAlreadyExistsException();
+        }
+
+        String trimmedUsername = username.trim();
+        String normalizedUsername = normalizeUsername(trimmedUsername);
+        String discriminator = generateDiscriminator(normalizedUsername);
+
+        UserProfileInfo info = UserProfileInfo.create(trimmedUsername, discriminator);
+        UserProfile userProfile = UserProfile.create(info);
+
+        if (bio != null) {
+            userProfile.updateBio(normalizeBio(bio));
+        }
+
+        if (avatarUrl != null) {
+            userProfile.updateAvatarUrl(normalizeAvatarUrl(avatarUrl));
+        }
+
+        UserProfile savedUserProfile = userProfileRepository.save(userProfile);
+
+        AuthIdentity authIdentity = AuthIdentity.create(userIdentity.issuer(), userIdentity.subject(), savedUserProfile);
+        authIdentityRepository.save(authIdentity);
+
+        return savedUserProfile;
     }
 
     @Override
     @Transactional(readOnly = true)
-    public UserProfile getCurrentUser(String issuer, String subject) {
-        return authIdentityRepository.findByIssuerAndSubject(issuer, subject)
+    public UserProfile getCurrentUser(UserIdentity userIdentity) {
+        return authIdentityRepository.findByIssuerAndSubject(userIdentity.issuer(), userIdentity.subject())
                 .map(AuthIdentity::getUserProfile)
-                .orElseThrow(CurrentUserNotFoundException::new);
+                .orElseThrow(ProfileNotFoundException::new);
     }
 
     @Override
     @Transactional
     public UserProfile updateProfile(
-            String issuer,
-            String subject,
+            UserIdentity userIdentity,
             String username,
             String bio,
             String avatarUrl,
             String discriminator
     ) {
-        UserProfile userProfile = getCurrentUser(issuer, subject);
+        UserProfile userProfile = getCurrentUser(userIdentity);
 
         applyBioUpdate(userProfile, bio);
         applyAvatarUrlUpdate(userProfile, avatarUrl);
@@ -73,18 +98,6 @@ public class UserProfileServiceImpl implements UserProfileService {
         if (userProfile.getAccountType() == AccountType.NORMAL) {
             userProfile.upgradeToPremium();
         }
-
-        return userProfile;
-    }
-
-    private UserProfile createNewUser(String issuer, String subject) {
-        String username = generateBaseUsername(subject);
-        String discriminator = generateDiscriminator(normalizeUsername(username));
-
-        UserProfileInfo info = UserProfileInfo.create(username, discriminator);
-        UserProfile userProfile = userProfileRepository.save(UserProfile.create(info));
-
-        authIdentityRepository.save(AuthIdentity.create(issuer, subject, userProfile));
 
         return userProfile;
     }

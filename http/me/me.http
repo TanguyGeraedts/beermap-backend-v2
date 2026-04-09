@@ -31,14 +31,32 @@ password={{password}}
 
 ### =====================================================
 ### GET /api/v1/users/me
-### - Creates user if not exists
-### - Returns MeResponse
+### - Checks if user exists
+### - Returns MeResponse if it does
+### - Returns PROFILE_NOT_FOUND if it doesnt
 ### =====================================================
 
 GET {{backend_base}}/api/v1/users/me
 Authorization: Bearer {{access_token}}
 Accept: application/json
 
+
+### =====================================================
+### POST /api/v1/users/me
+### - Creates user
+### - Returns MeResponse
+### =====================================================
+
+POST {{backend_base}}/api/v1/users/me
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "username": "Tanguy",
+  "bio": "Beer enthusiast",
+  "avatarUrl": "https://example.com/avatar.png"
+}
 
 ### =====================================================
 ### PATCH /api/v1/users/me

@@ -1,18 +1,23 @@
 package be.tanguy.beermap.api.users.service;
 
+import be.tanguy.beermap.api.common.security.UserIdentity;
 import be.tanguy.beermap.api.users.domain.UserProfile;
 
 import java.util.UUID;
 
 public interface UserProfileService {
 
-    UserProfile getOrCreateUser(String issuer, String subject);
+    UserProfile createUser(
+            UserIdentity userIdentity,
+            String username,
+            String bio,
+            String avatarUrl
+    );
 
-    UserProfile getCurrentUser(String issuer, String subject);
+    UserProfile getCurrentUser(UserIdentity userIdentity);
 
     UserProfile updateProfile(
-            String issuer,
-            String subject,
+            UserIdentity userIdentity,
             String username,
             String bio,
             String avatarUrl,

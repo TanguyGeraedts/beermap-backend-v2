@@ -8,13 +8,12 @@ import org.springframework.stereotype.Component;
 @Component
 public class CurrentUser {
 
-    public String getIssuer() {
+    public UserIdentity getIdentity() {
         Jwt jwt = getJwt();
-        return jwt.getIssuer() != null ? jwt.getIssuer().toString() : null;
-    }
-
-    public String getSubject() {
-        return getJwt().getSubject();
+        return new UserIdentity(
+                jwt.getIssuer() != null ? jwt.getIssuer().toString() : null,
+                jwt.getSubject()
+        );
     }
 
     private Jwt getJwt() {
