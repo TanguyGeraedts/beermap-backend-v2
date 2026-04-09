@@ -1,5 +1,10 @@
 package be.tanguy.beermap.api.common.web;
 
+import be.tanguy.beermap.api.friends.exception.CannotFriendYourselfException;
+import be.tanguy.beermap.api.friends.exception.FriendshipAlreadyExistsException;
+import be.tanguy.beermap.api.friends.exception.FriendshipBlockedException;
+import be.tanguy.beermap.api.friends.exception.InvalidFriendshipStateException;
+import be.tanguy.beermap.api.friends.exception.UserNotPartOfFriendshipException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -15,7 +20,7 @@ public class GlobalExceptionHandler {
 
     /**
      * Generic handler for all domain exceptions that implement ApiException.
-     * New domains get handled automatically — no changes needed here.
+     * New domains get handled automatically.
      */
     @ExceptionHandler(ApiException.class)
     public ResponseEntity<ApiError> handleApiException(ApiException ex) {
@@ -23,6 +28,38 @@ public class GlobalExceptionHandler {
                 .body(new ApiError(ex.getCode(), ex.getMessage()));
     }
 
+    /// FRIENDSHIP EXCEPTIONS
+    @ExceptionHandler(CannotFriendYourselfException.class)
+    public ResponseEntity<ApiError> handleCannotFriendYourself(CannotFriendYourselfException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ApiError("CANNOT_FRIEND_YOURSELF", ex.getMessage()));
+    }
+
+    @ExceptionHandler(UserNotPartOfFriendshipException.class)
+    public ResponseEntity<ApiError> handleUserNotPartOfFriendship(UserNotPartOfFriendshipException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(new ApiError("USER_NOT_PART_OF_FRIENDSHIP", ex.getMessage()));
+    }
+
+    @ExceptionHandler(InvalidFriendshipStateException.class)
+    public ResponseEntity<ApiError> handleInvalidFriendshipState(InvalidFriendshipStateException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ApiError("INVALID_FRIENDSHIP_STATE", ex.getMessage()));
+    }
+
+    @ExceptionHandler(FriendshipAlreadyExistsException.class)
+    public ResponseEntity<ApiError> handleFriendshipAlreadyExists(FriendshipAlreadyExistsException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ApiError("FRIENDSHIP_ALREADY_EXISTS", ex.getMessage()));
+    }
+
+    @ExceptionHandler(FriendshipBlockedException.class)
+    public ResponseEntity<ApiError> handleFriendshipBlocked(FriendshipBlockedException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(new ApiError("FRIENDSHIP_BLOCKED", ex.getMessage()));
+    }
+
+    /// VALIDATION / SECURITY
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiError> handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
         String message = ex.getBindingResult()
@@ -54,6 +91,7 @@ public class GlobalExceptionHandler {
                 .body(new ApiError("FORBIDDEN", "You are not allowed to perform this action"));
     }
 
+    /// FALLBACK
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleUnexpected(Exception ex) {
         log.error("Unexpected error", ex);
