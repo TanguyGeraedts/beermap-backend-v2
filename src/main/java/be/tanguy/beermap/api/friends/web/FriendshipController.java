@@ -1,126 +1,165 @@
-package be.tanguy.beermap.api.friends.controller;
+package be.tanguy.beermap.api.friends.web;
 
 import be.tanguy.beermap.api.common.security.UserIdentity;
+import be.tanguy.beermap.api.common.web.ApiPaths;
 import be.tanguy.beermap.api.friends.domain.Friendship;
+import be.tanguy.beermap.api.friends.domain.FriendshipStatus;
 import be.tanguy.beermap.api.friends.service.FriendshipService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/friendships")
+@RequestMapping(ApiPaths.Friendships.BASE)
 @RequiredArgsConstructor
+@Validated
 public class FriendshipController {
 
     private final FriendshipService friendshipService;
 
-    /// Queries
-    @GetMapping
-    public ResponseEntity<List<Friendship>> getAcceptedFriendships(
-            @AuthenticationPrincipal UserIdentity userIdentity
+    @PostMapping(ApiPaths.Friendships.REQUEST)
+    @ResponseStatus(HttpStatus.CREATED)
+    public FriendshipResponse sendFriendRequest(
+            @AuthenticationPrincipal UserIdentity userIdentity,
+            @Valid @RequestBody FriendshipTargetRequest request
     ) {
-        return ResponseEntity.ok(friendshipService.getAcceptedFriendships(userIdentity));
+        return FriendshipResponse.from(
+                friendshipService.sendFriendRequest(userIdentity, request.userId())
+        );
     }
 
-    @GetMapping("/requests/incoming")
-    public ResponseEntity<List<Friendship>> getIncomingRequests(
-            @AuthenticationPrincipal UserIdentity userIdentity
+    @PostMapping(ApiPaths.Friendships.ACCEPT)
+    public FriendshipResponse acceptFriendRequest(
+            @AuthenticationPrincipal UserIdentity userIdentity,
+            @Valid @RequestBody FriendshipTargetRequest request
     ) {
-        return ResponseEntity.ok(friendshipService.getPendingIncomingRequests(userIdentity));
+        return FriendshipResponse.from(
+                friendshipService.acceptFriendRequest(userIdentity, request.userId())
+        );
     }
 
-    @GetMapping("/requests/outgoing")
-    public ResponseEntity<List<Friendship>> getOutgoingRequests(
-            @AuthenticationPrincipal UserIdentity userIdentity
+    @PostMapping(ApiPaths.Friendships.REJECT)
+    public FriendshipResponse rejectFriendRequest(
+            @AuthenticationPrincipal UserIdentity userIdentity,
+            @Valid @RequestBody FriendshipTargetRequest request
     ) {
-        return ResponseEntity.ok(friendshipService.getPendingOutgoingRequests(userIdentity));
+        return FriendshipResponse.from(
+                friendshipService.rejectFriendRequest(userIdentity, request.userId())
+        );
     }
 
-    @GetMapping("/blocked")
-    public ResponseEntity<List<Friendship>> getBlockedUsers(
+    @PostMapping(ApiPaths.Friendships.CANCEL)
+    public FriendshipResponse cancelFriendRequest(
+            @AuthenticationPrincipal UserIdentity userIdentity,
+            @Valid @RequestBody FriendshipTargetRequest request
+    ) {
+        return FriendshipResponse.from(
+                friendshipService.cancelFriendRequest(userIdentity, request.userId())
+        );
+    }
+
+    @PostMapping(ApiPaths.Friendships.REMOVE)
+    public FriendshipResponse removeFriend(
+            @AuthenticationPrincipal UserIdentity userIdentity,
+            @Valid @RequestBody FriendshipTargetRequest request
+    ) {
+        return FriendshipResponse.from(
+                friendshipService.removeFriend(userIdentity, request.userId())
+        );
+    }
+
+    @PostMapping(ApiPaths.Friendships.BLOCK)
+    public FriendshipResponse blockUser(
+            @AuthenticationPrincipal UserIdentity userIdentity,
+            @Valid @RequestBody FriendshipTargetRequest request
+    ) {
+        return FriendshipResponse.from(
+                friendshipService.blockUser(userIdentity, request.userId())
+        );
+    }
+
+    @GetMapping(ApiPaths.Friendships.INCOMING)
+    public List<FriendshipResponse> getPendingIncomingRequests(
             @AuthenticationPrincipal UserIdentity userIdentity
     ) {
-        return ResponseEntity.ok(friendshipService.getBlockedUsers(userIdentity));
+        return friendshipService.getPendingIncomingRequests(userIdentity)
+                .stream()
+                .map(FriendshipResponse::from)
+                .toList();
+    }
+
+    @GetMapping(ApiPaths.Friendships.OUTGOING)
+    public List<FriendshipResponse> getPendingOutgoingRequests(
+            @AuthenticationPrincipal UserIdentity userIdentity
+    ) {
+        return friendshipService.getPendingOutgoingRequests(userIdentity)
+                .stream()
+                .map(FriendshipResponse::from)
+                .toList();
+    }
+
+    @GetMapping(ApiPaths.Friendships.FRIENDS)
+    public List<FriendshipResponse> getAcceptedFriendships(
+            @AuthenticationPrincipal UserIdentity userIdentity
+    ) {
+        return friendshipService.getAcceptedFriendships(userIdentity)
+                .stream()
+                .map(FriendshipResponse::from)
+                .toList();
+    }
+
+    @GetMapping(ApiPaths.Friendships.BLOCKED)
+    public List<FriendshipResponse> getBlockedUsers(
+            @AuthenticationPrincipal UserIdentity userIdentity
+    ) {
+        return friendshipService.getBlockedUsers(userIdentity)
+                .stream()
+                .map(FriendshipResponse::from)
+                .toList();
     }
 
     @GetMapping("/{otherUserId}")
-    public ResponseEntity<Friendship> getFriendship(
+    public FriendshipResponse getFriendship(
             @AuthenticationPrincipal UserIdentity userIdentity,
             @PathVariable UUID otherUserId
     ) {
-        return ResponseEntity.ok(friendshipService.getFriendship(userIdentity, otherUserId));
+        return FriendshipResponse.from(
+                friendshipService.getFriendship(userIdentity, otherUserId)
+        );
     }
 
-    /// Friend requests
-    @PostMapping("/requests/{addresseeId}")
-    public ResponseEntity<Friendship> sendFriendRequest(
-            @AuthenticationPrincipal UserIdentity userIdentity,
-            @PathVariable UUID addresseeId
+    public record FriendshipTargetRequest(
+            @NotNull UUID userId
     ) {
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(friendshipService.sendFriendRequest(userIdentity, addresseeId));
     }
 
-    @PostMapping("/requests/{addresseeId}/resend")
-    public ResponseEntity<Friendship> resendFriendRequest(
-            @AuthenticationPrincipal UserIdentity userIdentity,
-            @PathVariable UUID addresseeId
+    public record FriendshipResponse(
+            UUID id,
+            UUID requesterId,
+            UUID addresseeId,
+            FriendshipStatus status,
+            Instant respondedAt,
+            Instant createdAt,
+            Instant updatedAt
     ) {
-        return ResponseEntity.ok(friendshipService.resendFriendRequest(userIdentity, addresseeId));
-    }
-
-    @PostMapping("/requests/{requesterId}/accept")
-    public ResponseEntity<Friendship> acceptFriendRequest(
-            @AuthenticationPrincipal UserIdentity userIdentity,
-            @PathVariable UUID requesterId
-    ) {
-        return ResponseEntity.ok(friendshipService.acceptFriendRequest(userIdentity, requesterId));
-    }
-
-    @PostMapping("/requests/{requesterId}/reject")
-    public ResponseEntity<Friendship> rejectFriendRequest(
-            @AuthenticationPrincipal UserIdentity userIdentity,
-            @PathVariable UUID requesterId
-    ) {
-        return ResponseEntity.ok(friendshipService.rejectFriendRequest(userIdentity, requesterId));
-    }
-
-    @DeleteMapping("/requests/{addresseeId}")
-    public ResponseEntity<Friendship> cancelFriendRequest(
-            @AuthenticationPrincipal UserIdentity userIdentity,
-            @PathVariable UUID addresseeId
-    ) {
-        return ResponseEntity.ok(friendshipService.cancelFriendRequest(userIdentity, addresseeId));
-    }
-
-    /// Friendship management
-    @DeleteMapping("/{otherUserId}")
-    public ResponseEntity<Friendship> removeFriend(
-            @AuthenticationPrincipal UserIdentity userIdentity,
-            @PathVariable UUID otherUserId
-    ) {
-        return ResponseEntity.ok(friendshipService.removeFriend(userIdentity, otherUserId));
-    }
-
-    @PostMapping("/{otherUserId}/block")
-    public ResponseEntity<Friendship> blockUser(
-            @AuthenticationPrincipal UserIdentity userIdentity,
-            @PathVariable UUID otherUserId
-    ) {
-        return ResponseEntity.ok(friendshipService.blockUser(userIdentity, otherUserId));
-    }
-
-    @DeleteMapping("/{otherUserId}/block")
-    public ResponseEntity<Friendship> unblockUser(
-            @AuthenticationPrincipal UserIdentity userIdentity,
-            @PathVariable UUID otherUserId
-    ) {
-        return ResponseEntity.ok(friendshipService.unblockUser(userIdentity, otherUserId));
+        public static FriendshipResponse from(Friendship friendship) {
+            return new FriendshipResponse(
+                    friendship.getId(),
+                    friendship.getRequesterId(),
+                    friendship.getAddresseeId(),
+                    friendship.getStatus(),
+                    friendship.getRespondedAt(),
+                    friendship.getCreatedAt(),
+                    friendship.getUpdatedAt()
+            );
+        }
     }
 }

@@ -29,4 +29,41 @@ public final class ApiPaths {
 
         private Images() {}
     }
+
+    public static final class Catalog {
+        public static final String BASE = V1 + "/catalog";
+
+        public static final class Drinks {
+            public static final String BASE = Catalog.BASE + "/drinks";
+
+            public static final String BY_NAME = "/by-name";
+            public static final String BY_CATEGORY = "/by-category";
+
+            public static final String SEARCH_NAME = "/search/name";
+            public static final String SEARCH_SUB_TYPE = "/search/sub-type";
+            public static final String SEARCH_CATEGORY_NAME = "/search/category-name";
+
+            private Drinks() {}
+        }
+
+        private Catalog() {}
+    }
+
+    public static final class Friendships {
+        public static final String BASE = V1 + "/friendships";
+
+        public static final String REQUEST = "/request";
+        public static final String ACCEPT = "/accept";
+        public static final String REJECT = "/reject";
+        public static final String CANCEL = "/cancel";
+        public static final String REMOVE = "/remove";
+        public static final String BLOCK = "/block";
+
+        public static final String INCOMING = "/incoming";
+        public static final String OUTGOING = "/outgoing";
+        public static final String FRIENDS = "/friends";
+        public static final String BLOCKED = "/blocked";
+
+        private Friendships() {}
+    }
 }
