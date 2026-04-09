@@ -1,0 +1,2 @@
+DROP SCHEMA beermap CASCADE;
+CREATE SCHEMA beermap;

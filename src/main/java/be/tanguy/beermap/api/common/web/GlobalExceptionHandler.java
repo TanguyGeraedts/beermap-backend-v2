@@ -5,6 +5,9 @@ import be.tanguy.beermap.api.friends.exception.FriendshipAlreadyExistsException;
 import be.tanguy.beermap.api.friends.exception.FriendshipBlockedException;
 import be.tanguy.beermap.api.friends.exception.InvalidFriendshipStateException;
 import be.tanguy.beermap.api.friends.exception.UserNotPartOfFriendshipException;
+import be.tanguy.beermap.api.logs.exception.DrinkCatalogItemAlreadyExistsException;
+import be.tanguy.beermap.api.logs.exception.DrinkCatalogItemNotFoundException;
+import be.tanguy.beermap.api.logs.exception.InvalidDrinkCatalogItemException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -26,6 +29,25 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiError> handleApiException(ApiException ex) {
         return ResponseEntity.status(ex.getStatus())
                 .body(new ApiError(ex.getCode(), ex.getMessage()));
+    }
+
+    /// DRINK CATALOG EXCEPTIONS
+    @ExceptionHandler(DrinkCatalogItemNotFoundException.class)
+    public ResponseEntity<ApiError> handleDrinkCatalogItemNotFound(DrinkCatalogItemNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ApiError("DRINK_CATALOG_ITEM_NOT_FOUND", ex.getMessage()));
+    }
+
+    @ExceptionHandler(DrinkCatalogItemAlreadyExistsException.class)
+    public ResponseEntity<ApiError> handleDrinkCatalogItemAlreadyExists(DrinkCatalogItemAlreadyExistsException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ApiError("DRINK_CATALOG_ITEM_ALREADY_EXISTS", ex.getMessage()));
+    }
+
+    @ExceptionHandler(InvalidDrinkCatalogItemException.class)
+    public ResponseEntity<ApiError> handleInvalidDrinkCatalogItem(InvalidDrinkCatalogItemException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ApiError("INVALID_DRINK_CATALOG_ITEM", ex.getMessage()));
     }
 
     /// FRIENDSHIP EXCEPTIONS
