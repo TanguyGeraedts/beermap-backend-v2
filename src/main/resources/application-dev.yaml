@@ -1,6 +1,3 @@
-server:
-  port: ${SERVER_PORT}
-
 spring:
   datasource:
     url: jdbc:postgresql://localhost:${POSTGRES_PORT}/${POSTGRES_DB}
