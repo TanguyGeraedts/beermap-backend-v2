@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 import static be.tanguy.beermap.api.users.domain.UserProfileInfo.DISCRIMINATOR_LENGTH;
 import static be.tanguy.beermap.api.users.domain.UserProfileInfo.MAX_USERNAME_LENGTH;
@@ -55,54 +56,10 @@ public class UserProfileServiceImpl implements UserProfileService {
     ) {
         UserProfile userProfile = getCurrentUser(issuer, subject);
 
-        userProfile.updateProfileInfo(
-                normalizeBio(bio),
-                normalizeAvatarUrl(avatarUrl)
-        );
-
-        if (username != null && !username.isBlank()) {
-            String normalizedUsername = normalizeUsername(username);
-            String currentNormalizedUsername = userProfile.getInfo().getUsernameNormalized();
-            String currentDiscriminator = userProfile.getInfo().getDiscriminator();
-
-            boolean usernameChanged = !normalizedUsername.equals(currentNormalizedUsername);
-
-            if (usernameChanged) {
-                boolean taken = userProfileRepository.existsByInfo_UsernameNormalizedAndInfo_Discriminator(
-                        normalizedUsername,
-                        currentDiscriminator
-                );
-
-                if (taken) {
-                    throw new UsernameDiscriminatorAlreadyTakenException(username.trim(), currentDiscriminator);
-                }
-
-                userProfile.changeUsername(username.trim());
-            }
-        }
-
-        if (discriminator != null && !discriminator.isBlank()) {
-            String normalizedDiscriminator = normalizeDiscriminator(discriminator);
-            String currentDiscriminator = userProfile.getInfo().getDiscriminator();
-
-            if (!normalizedDiscriminator.equals(currentDiscriminator) && userProfile.hasPremiumAccess()) {
-                String usernameNormalized = userProfile.getInfo().getUsernameNormalized();
-
-                boolean taken = userProfileRepository.existsByInfo_UsernameNormalizedAndInfo_Discriminator(
-                        usernameNormalized,
-                        normalizedDiscriminator
-                );
-
-                if (taken) {
-                    throw new UsernameDiscriminatorAlreadyTakenException(
-                            userProfile.getInfo().getUsername(),
-                            normalizedDiscriminator
-                    );
-                }
-
-                userProfile.changeDiscriminator(normalizedDiscriminator);
-            }
-        }
+        applyBioUpdate(userProfile, bio);
+        applyAvatarUrlUpdate(userProfile, avatarUrl);
+        applyUsernameUpdate(userProfile, username);
+        applyDiscriminatorUpdate(userProfile, discriminator);
 
         return userProfile;
     }
@@ -122,7 +79,7 @@ public class UserProfileServiceImpl implements UserProfileService {
 
     private UserProfile createNewUser(String issuer, String subject) {
         String username = generateBaseUsername(subject);
-        String discriminator = generateDiscriminator(username);
+        String discriminator = generateDiscriminator(normalizeUsername(username));
 
         UserProfileInfo info = UserProfileInfo.create(username, discriminator);
         UserProfile userProfile = userProfileRepository.save(UserProfile.create(info));
@@ -130,6 +87,81 @@ public class UserProfileServiceImpl implements UserProfileService {
         authIdentityRepository.save(AuthIdentity.create(issuer, subject, userProfile));
 
         return userProfile;
+    }
+
+    private void applyBioUpdate(UserProfile userProfile, String bio) {
+        if (bio == null) {
+            return;
+        }
+
+        userProfile.updateBio(normalizeBio(bio));
+    }
+
+    private void applyAvatarUrlUpdate(UserProfile userProfile, String avatarUrl) {
+        if (avatarUrl == null) {
+            return;
+        }
+
+        userProfile.updateAvatarUrl(normalizeAvatarUrl(avatarUrl));
+    }
+
+    private void applyUsernameUpdate(UserProfile userProfile, String username) {
+        if (username == null || username.isBlank()) {
+            return;
+        }
+
+        String trimmedUsername = username.trim();
+        String normalizedUsername = normalizeUsername(trimmedUsername);
+        String currentNormalizedUsername = userProfile.getInfo().getUsernameNormalized();
+        String currentDiscriminator = userProfile.getInfo().getDiscriminator();
+
+        if (normalizedUsername.equals(currentNormalizedUsername)) {
+            return;
+        }
+
+        boolean taken = userProfileRepository.existsByInfo_UsernameNormalizedAndInfo_Discriminator(
+                normalizedUsername,
+                currentDiscriminator
+        );
+
+        if (taken) {
+            throw new UsernameDiscriminatorAlreadyTakenException(trimmedUsername, currentDiscriminator);
+        }
+
+        userProfile.changeUsername(trimmedUsername);
+    }
+
+    private void applyDiscriminatorUpdate(UserProfile userProfile, String discriminator) {
+        if (discriminator == null || discriminator.isBlank()) {
+            return;
+        }
+
+        if (!userProfile.hasPremiumAccess()) {
+            return;
+        }
+
+        String normalizedDiscriminator = normalizeDiscriminator(discriminator);
+        String currentDiscriminator = userProfile.getInfo().getDiscriminator();
+
+        if (normalizedDiscriminator.equals(currentDiscriminator)) {
+            return;
+        }
+
+        String usernameNormalized = userProfile.getInfo().getUsernameNormalized();
+
+        boolean taken = userProfileRepository.existsByInfo_UsernameNormalizedAndInfo_Discriminator(
+                usernameNormalized,
+                normalizedDiscriminator
+        );
+
+        if (taken) {
+            throw new UsernameDiscriminatorAlreadyTakenException(
+                    userProfile.getInfo().getUsername(),
+                    normalizedDiscriminator
+            );
+        }
+
+        userProfile.changeDiscriminator(normalizedDiscriminator);
     }
 
     private String generateBaseUsername(String subject) {
@@ -146,36 +178,42 @@ public class UserProfileServiceImpl implements UserProfileService {
         return cleaned;
     }
 
-    private String generateDiscriminator(String username) {
-        int counter = 1;
-        String usernameNormalized = normalizeUsername(username);
+    private String generateDiscriminator(String usernameNormalized) {
+        int maxAttempts = 10;
 
-        while (true) {
-            String discriminator = String.format("%0" + DISCRIMINATOR_LENGTH + "d", counter);
+        for (int i = 0; i < maxAttempts; i++) {
+            String discriminator = generateRandomDiscriminator();
 
-            if (!userProfileRepository.existsByInfo_UsernameNormalizedAndInfo_Discriminator(
+            boolean exists = userProfileRepository.existsByInfo_UsernameNormalizedAndInfo_Discriminator(
                     usernameNormalized,
                     discriminator
-            )) {
+            );
+
+            if (!exists) {
                 return discriminator;
             }
-
-            counter++;
         }
+
+        throw new InvalidDiscriminatorException(
+                "Failed to generate unique discriminator after " + maxAttempts + " attempts"
+        );
+    }
+
+    private String generateRandomDiscriminator() {
+        int max = (int) Math.pow(10, DISCRIMINATOR_LENGTH);
+        int value = ThreadLocalRandom.current().nextInt(max);
+
+        return String.format("%0" + DISCRIMINATOR_LENGTH + "d", value);
     }
 
     private String normalizeBio(String bio) {
-        if (bio == null || bio.isBlank()) {
-            return null;
-        }
-        return bio.trim();
+        String trimmed = bio.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 
     private String normalizeAvatarUrl(String avatarUrl) {
-        if (avatarUrl == null || avatarUrl.isBlank()) {
-            return null;
-        }
-        return avatarUrl.trim();
+        String trimmed = avatarUrl.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 
     private String normalizeDiscriminator(String discriminator) {

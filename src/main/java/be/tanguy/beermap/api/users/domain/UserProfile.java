@@ -9,35 +9,32 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(
-        name = "user_profiles",
-        uniqueConstraints = {
-                @UniqueConstraint(
-                        name = "uk_user_profiles_username_normalized_discriminator",
-                        columnNames = {"username_normalized", "discriminator"}
-                )
-        }
-)
+@Table(name = "user_profiles")
 public class UserProfile extends AbstractBaseObject {
 
     @Embedded
     private UserProfileInfo info;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "account_type", nullable = false, length = 20)
+    @Column(name = "account_type", nullable = false)
     private AccountType accountType;
 
-    private UserProfile(UserProfileInfo info, AccountType accountType) {
+    private UserProfile(UserProfileInfo info) {
         this.info = info;
-        this.accountType = accountType;
+        this.accountType = AccountType.NORMAL;
     }
 
     public static UserProfile create(UserProfileInfo info) {
-        return new UserProfile(info, AccountType.NORMAL);
+        return new UserProfile(info);
     }
 
-    public void updateProfileInfo(String bio, String avatarUrl) {
-        this.info.updateProfile(bio, avatarUrl);
+    /// Profile Updates (PATCH-safe)
+    public void updateBio(String bio) {
+        this.info.updateBio(bio);
+    }
+
+    public void updateAvatarUrl(String avatarUrl) {
+        this.info.updateAvatarUrl(avatarUrl);
     }
 
     public void changeUsername(String username) {
@@ -48,23 +45,24 @@ public class UserProfile extends AbstractBaseObject {
         this.info.changeDiscriminator(discriminator);
     }
 
-    public void changeIdentity(String username, String discriminator) {
-        this.info.changeIdentity(username, discriminator);
-    }
-
+    /// Account Logic
     public void upgradeToPremium() {
         this.accountType = AccountType.PREMIUM;
     }
 
-    public void setAdmin() {
-        this.accountType = AccountType.ADMIN;
+    public void downgradeToUser(){
+        this.accountType = AccountType.NORMAL;
     }
 
-    public void downgradeToNormal() {
-        this.accountType = AccountType.NORMAL;
+    public void upgradeToAdmin() {
+        this.accountType = AccountType.ADMIN;
     }
 
     public boolean hasPremiumAccess() {
         return this.accountType.hasPremiumAccess();
+    }
+
+    public boolean isAdmin() {
+        return this.accountType == AccountType.ADMIN;
     }
 }

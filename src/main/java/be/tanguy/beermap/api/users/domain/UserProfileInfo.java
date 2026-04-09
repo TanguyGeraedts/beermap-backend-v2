@@ -6,22 +6,23 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.Locale;
+
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Embeddable
 public class UserProfileInfo {
 
-    /// Static Variables
     public static final int MIN_USERNAME_LENGTH = 3;
     public static final int MAX_USERNAME_LENGTH = 32;
-    public static final String USERNAME_REGEX = "^[a-zA-Z0-9._-]+$";
-
 
     public static final int DISCRIMINATOR_LENGTH = 4;
-    public static final String DISCRIMINATOR_REGEX = "^\\d{4}$";
 
     public static final int MAX_BIO_LENGTH = 500;
     public static final int MAX_AVATAR_URL_LENGTH = 2048;
+
+    public static final String USERNAME_REGEX = "^[a-zA-Z0-9._-]+$";
+    public static final String DISCRIMINATOR_REGEX = "^\\d{4}$";
 
     @Column(name = "username", nullable = false, length = MAX_USERNAME_LENGTH)
     private String username;
@@ -62,8 +63,11 @@ public class UserProfileInfo {
         );
     }
 
-    public void updateProfile(String bio, String avatarUrl) {
+    public void updateBio(String bio) {
         this.bio = bio;
+    }
+
+    public void updateAvatarUrl(String avatarUrl) {
         this.avatarUrl = avatarUrl;
     }
 
@@ -83,6 +87,6 @@ public class UserProfileInfo {
     }
 
     public static String normalizeUsername(String username) {
-        return username == null ? null : username.trim().toLowerCase();
+        return username == null ? null : username.trim().toLowerCase(Locale.ROOT);
     }
 }
