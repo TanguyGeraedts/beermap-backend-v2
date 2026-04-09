@@ -1,16 +1,17 @@
 package be.tanguy.beermap.api.media.service;
 
+import be.tanguy.beermap.api.common.security.UserIdentity;
 import be.tanguy.beermap.api.media.web.dto.CreateUploadUrlResponse;
 
 public interface ImageStorageService {
 
     CreateUploadUrlResponse createProfilePictureUploadUrl(
-            String userId,
+            UserIdentity userIdentity,
             String contentType
     );
 
     CreateUploadUrlResponse createDrinkLogUploadUrl(
-            String userId,
+            UserIdentity userIdentity,
             String drinkLogId,
             String contentType
     );

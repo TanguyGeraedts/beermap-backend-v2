@@ -1,6 +1,5 @@
 package be.tanguy.beermap.api.common.web;
 
-import be.tanguy.beermap.api.users.exception.*;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -14,34 +13,14 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(ProfileNotFoundException.class)
-    public ResponseEntity<ApiError> handleProfileNotFound(ProfileNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(new ApiError("PROFILE_NOT_FOUND", ex.getMessage()));
-    }
-
-    @ExceptionHandler(CurrentUserNotFoundException.class)
-    public ResponseEntity<ApiError> handleCurrentUserNotFound(CurrentUserNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(new ApiError("CURRENT_USER_NOT_FOUND", ex.getMessage()));
-    }
-
-    @ExceptionHandler(UserProfileNotFoundException.class)
-    public ResponseEntity<ApiError> handleUserProfileNotFound(UserProfileNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(new ApiError("USER_PROFILE_NOT_FOUND", ex.getMessage()));
-    }
-
-    @ExceptionHandler(UsernameDiscriminatorAlreadyTakenException.class)
-    public ResponseEntity<ApiError> handleUsernameDiscriminatorTaken(UsernameDiscriminatorAlreadyTakenException ex) {
-        return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(new ApiError("USERNAME_DISCRIMINATOR_ALREADY_TAKEN", ex.getMessage()));
-    }
-
-    @ExceptionHandler(InvalidDiscriminatorException.class)
-    public ResponseEntity<ApiError> handleInvalidDiscriminator(InvalidDiscriminatorException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new ApiError("INVALID_DISCRIMINATOR", ex.getMessage()));
+    /**
+     * Generic handler for all domain exceptions that implement ApiException.
+     * New domains get handled automatically — no changes needed here.
+     */
+    @ExceptionHandler(ApiException.class)
+    public ResponseEntity<ApiError> handleApiException(ApiException ex) {
+        return ResponseEntity.status(ex.getStatus())
+                .body(new ApiError(ex.getCode(), ex.getMessage()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -80,11 +59,5 @@ public class GlobalExceptionHandler {
         log.error("Unexpected error", ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(new ApiError("INTERNAL_SERVER_ERROR", "An unexpected error occurred"));
-    }
-
-    @ExceptionHandler(ProfileAlreadyExistsException.class)
-    public ResponseEntity<ApiError> handleProfileAlreadyExists(ProfileAlreadyExistsException ex) {
-        return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(new ApiError("PROFILE_ALREADY_EXISTS", ex.getMessage()));
     }
 }

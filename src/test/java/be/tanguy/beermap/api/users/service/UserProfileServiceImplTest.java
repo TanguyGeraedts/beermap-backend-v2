@@ -8,7 +8,6 @@ import be.tanguy.beermap.api.users.domain.UserProfileInfo;
 import be.tanguy.beermap.api.users.exception.InvalidDiscriminatorException;
 import be.tanguy.beermap.api.users.exception.ProfileAlreadyExistsException;
 import be.tanguy.beermap.api.users.exception.ProfileNotFoundException;
-import be.tanguy.beermap.api.users.exception.UserProfileNotFoundException;
 import be.tanguy.beermap.api.users.exception.UsernameDiscriminatorAlreadyTakenException;
 import be.tanguy.beermap.api.users.repository.AuthIdentityRepository;
 import be.tanguy.beermap.api.users.repository.UserProfileRepository;
@@ -21,10 +20,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.lang.reflect.Field;
 import java.util.Optional;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -419,43 +418,6 @@ class UserProfileServiceImplTest {
 
         verify(userProfileRepository, never())
                 .existsByInfo_UsernameNormalizedAndInfo_Discriminator(anyString(), anyString());
-    }
-
-    @Test
-    void upgradeToPremium_shouldUpgradeNormalUser() {
-        UUID userId = existingUser.getId();
-
-        when(userProfileRepository.findById(userId))
-                .thenReturn(Optional.of(existingUser));
-
-        UserProfile result = userProfileService.upgradeToPremium(userId);
-
-        assertEquals(AccountType.PREMIUM, result.getAccountType());
-    }
-
-    @Test
-    void upgradeToPremium_shouldKeepPremiumUserAsPremium() throws Exception {
-        setAccountType(existingUser, AccountType.PREMIUM);
-
-        UUID userId = existingUser.getId();
-
-        when(userProfileRepository.findById(userId))
-                .thenReturn(Optional.of(existingUser));
-
-        UserProfile result = userProfileService.upgradeToPremium(userId);
-
-        assertEquals(AccountType.PREMIUM, result.getAccountType());
-    }
-
-    @Test
-    void upgradeToPremium_shouldThrow_whenUserNotFound() {
-        UUID randomId = UUID.randomUUID();
-
-        when(userProfileRepository.findById(randomId))
-                .thenReturn(Optional.empty());
-
-        assertThrows(UserProfileNotFoundException.class,
-                () -> userProfileService.upgradeToPremium(randomId));
     }
 
     private void setAccountType(UserProfile userProfile, AccountType accountType) throws Exception {

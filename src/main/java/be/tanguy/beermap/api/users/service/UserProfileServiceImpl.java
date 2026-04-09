@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static be.tanguy.beermap.api.users.domain.UserProfileInfo.DISCRIMINATOR_LENGTH;
@@ -89,19 +88,6 @@ public class UserProfileServiceImpl implements UserProfileService {
         return userProfile;
     }
 
-    @Override
-    @Transactional
-    public UserProfile upgradeToPremium(UUID userProfileId) {
-        UserProfile userProfile = userProfileRepository.findById(userProfileId)
-                .orElseThrow(() -> new UserProfileNotFoundException(userProfileId));
-
-        if (userProfile.getAccountType() == AccountType.NORMAL) {
-            userProfile.upgradeToPremium();
-        }
-
-        return userProfile;
-    }
-
     private void applyBioUpdate(UserProfile userProfile, String bio) {
         if (bio == null) {
             return;
@@ -175,20 +161,6 @@ public class UserProfileServiceImpl implements UserProfileService {
         }
 
         userProfile.changeDiscriminator(normalizedDiscriminator);
-    }
-
-    private String generateBaseUsername(String subject) {
-        String cleaned = subject.replaceAll("[^a-zA-Z0-9._-]", "");
-
-        if (cleaned.isBlank()) {
-            cleaned = "user";
-        }
-
-        if (cleaned.length() > MAX_USERNAME_LENGTH) {
-            cleaned = cleaned.substring(0, MAX_USERNAME_LENGTH);
-        }
-
-        return cleaned;
     }
 
     private String generateDiscriminator(String usernameNormalized) {

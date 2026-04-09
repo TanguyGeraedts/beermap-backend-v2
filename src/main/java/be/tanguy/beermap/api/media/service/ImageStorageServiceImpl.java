@@ -1,6 +1,7 @@
 package be.tanguy.beermap.api.media.service;
 
 import be.tanguy.beermap.api.common.config.storage.StorageProperties;
+import be.tanguy.beermap.api.common.security.UserIdentity;
 import be.tanguy.beermap.api.media.web.dto.CreateUploadUrlResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,20 +24,20 @@ public class ImageStorageServiceImpl implements ImageStorageService {
 
     @Override
     public CreateUploadUrlResponse createProfilePictureUploadUrl(
-            String userId,
+            UserIdentity userIdentity,
             String contentType
     ) {
-        String key = imageKeyService.buildProfilePictureKey(userId, contentType);
+        String key = imageKeyService.buildProfilePictureKey(userIdentity.subject(), contentType);
         return createPresignedUpload(key, contentType);
     }
 
     @Override
     public CreateUploadUrlResponse createDrinkLogUploadUrl(
-            String userId,
+            UserIdentity userIdentity,
             String drinkLogId,
             String contentType
     ) {
-        String key = imageKeyService.buildDrinkLogKey(userId, drinkLogId, contentType);
+        String key = imageKeyService.buildDrinkLogKey(userIdentity.subject(), drinkLogId, contentType);
         return createPresignedUpload(key, contentType);
     }
 

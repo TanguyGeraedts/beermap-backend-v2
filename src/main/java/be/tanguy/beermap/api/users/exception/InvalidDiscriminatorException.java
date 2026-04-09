@@ -1,8 +1,14 @@
 package be.tanguy.beermap.api.users.exception;
 
-public class InvalidDiscriminatorException extends RuntimeException {
+import be.tanguy.beermap.api.common.web.ApiException;
+import org.springframework.http.HttpStatus;
 
-  public InvalidDiscriminatorException(String message) {
-    super(message);
-  }
+public class InvalidDiscriminatorException extends ApiException {
+
+    public InvalidDiscriminatorException(String message) {
+        super(message);
+    }
+
+    @Override public HttpStatus getStatus() { return HttpStatus.BAD_REQUEST; }
+    @Override public String getCode()       { return "INVALID_DISCRIMINATOR"; }
 }

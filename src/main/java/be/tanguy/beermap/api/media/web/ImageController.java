@@ -22,7 +22,7 @@ public class ImageController {
             @Valid @RequestBody CreateUploadUrlRequest request
     ) {
         return imageStorageService.createProfilePictureUploadUrl(
-                currentUser.getIdentity().subject(),
+                currentUser.getIdentity(),
                 request.contentType()
         );
     }
@@ -32,7 +32,7 @@ public class ImageController {
             @Valid @RequestBody CreateUploadUrlRequest request
     ) {
         return imageStorageService.createDrinkLogUploadUrl(
-                currentUser.getIdentity().subject(),
+                currentUser.getIdentity(),
                 request.drinkLogId(),
                 request.contentType()
         );

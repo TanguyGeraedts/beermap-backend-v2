@@ -1,8 +1,14 @@
 package be.tanguy.beermap.api.users.exception;
 
-public class UsernameDiscriminatorAlreadyTakenException extends RuntimeException {
+import be.tanguy.beermap.api.common.web.ApiException;
+import org.springframework.http.HttpStatus;
 
-  public UsernameDiscriminatorAlreadyTakenException(String username, String discriminator) {
-    super("Username/discriminator already taken: " + username + "#" + discriminator);
-  }
+public class UsernameDiscriminatorAlreadyTakenException extends ApiException {
+
+    public UsernameDiscriminatorAlreadyTakenException(String username, String discriminator) {
+        super("Username/discriminator already taken: " + username + "#" + discriminator);
+    }
+
+    @Override public HttpStatus getStatus() { return HttpStatus.CONFLICT; }
+    @Override public String getCode()       { return "USERNAME_DISCRIMINATOR_ALREADY_TAKEN"; }
 }
