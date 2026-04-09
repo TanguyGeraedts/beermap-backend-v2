@@ -1,0 +1,66 @@
+### =====================================================
+### Variables
+### =====================================================
+
+@keycloak_base=http://localhost:8081
+@realm=beermap-v2
+@client_id=beermap-backend-v2
+
+@backend_base=http://localhost:8080
+
+@username=tanguy@test.com
+@password=test
+
+
+### =====================================================
+### Login to Keycloak (Password Grant - DEV ONLY)
+### =====================================================
+
+POST {{keycloak_base}}/realms/{{realm}}/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+client_id={{client_id}}&
+grant_type=password&
+username={{username}}&
+password={{password}}
+
+> {%
+    client.global.set("access_token", response.body.access_token);
+%}
+
+
+### =====================================================
+### Create presigned URL for profile picture
+### =====================================================
+
+POST {{backend_base}}/api/v1/images/presign/profile-picture
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "contentType": "image/jpeg"
+}
+
+> {%
+    client.global.set("upload_url", response.body.uploadUrl);
+    client.global.set("public_url", response.body.publicUrl);
+    client.global.set("image_key", response.body.key);
+%}
+
+
+### =====================================================
+### Upload image.jpeg from the same folder
+### =====================================================
+
+PUT {{upload_url}}
+Content-Type: image/jpeg
+
+< ./image.jpeg
+
+
+### =====================================================
+### Uploaded image info
+### =====================================================
+
+GET {{public_url}}

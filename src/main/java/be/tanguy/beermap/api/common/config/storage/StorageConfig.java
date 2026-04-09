@@ -1,0 +1,52 @@
+package be.tanguy.beermap.api.common.config.storage;
+
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3Configuration;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+
+import java.net.URI;
+
+@Configuration
+@EnableConfigurationProperties(StorageProperties.class)
+public class StorageConfig {
+
+    @Bean
+    public S3Client s3Client(StorageProperties properties) {
+        AwsBasicCredentials credentials = AwsBasicCredentials.create(
+                properties.accessKeyId(),
+                properties.secretAccessKey()
+        );
+
+        return S3Client.builder()
+                .endpointOverride(URI.create(properties.endpoint()))
+                .region(Region.of("auto"))
+                .credentialsProvider(StaticCredentialsProvider.create(credentials))
+                .serviceConfiguration(
+                        S3Configuration.builder()
+                                .chunkedEncodingEnabled(false)
+                                .pathStyleAccessEnabled(false)
+                                .build()
+                )
+                .build();
+    }
+
+    @Bean
+    public S3Presigner s3Presigner(StorageProperties properties) {
+        AwsBasicCredentials credentials = AwsBasicCredentials.create(
+                properties.accessKeyId(),
+                properties.secretAccessKey()
+        );
+
+        return S3Presigner.builder()
+                .endpointOverride(URI.create(properties.endpoint()))
+                .region(Region.of("auto"))
+                .credentialsProvider(StaticCredentialsProvider.create(credentials))
+                .build();
+    }
+}

@@ -15,10 +15,18 @@ public final class ApiPaths {
         private Users() {}
     }
 
-    // Future:
     public static final class Sessions {
         public static final String BASE = V1 + "/sessions";
 
         private Sessions() {}
+    }
+
+    public static final class Images {
+        public static final String BASE = V1 + "/images";
+
+        public static final String PRESIGN_PROFILE_PICTURE = "/presign/profile-picture";
+        public static final String PRESIGN_DRINK_LOG = "/presign/drink-log";
+
+        private Images() {}
     }
 }
