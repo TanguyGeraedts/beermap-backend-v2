@@ -24,13 +24,13 @@ public class UserProfileInfo {
     public static final String USERNAME_REGEX = "^[a-zA-Z0-9._-]+$";
     public static final String DISCRIMINATOR_REGEX = "^\\d{4}$";
 
-    @Column(name = "targetUsername", nullable = false, length = MAX_USERNAME_LENGTH)
+    @Column(name = "username", nullable = false, length = MAX_USERNAME_LENGTH)
     private String username;
 
     @Column(name = "username_normalized", nullable = false, length = MAX_USERNAME_LENGTH)
     private String usernameNormalized;
 
-    @Column(name = "targetDiscriminator", nullable = false, length = DISCRIMINATOR_LENGTH)
+    @Column(name = "discriminator", nullable = false, length = DISCRIMINATOR_LENGTH)
     private String discriminator;
 
     @Column(name = "bio", length = MAX_BIO_LENGTH)
