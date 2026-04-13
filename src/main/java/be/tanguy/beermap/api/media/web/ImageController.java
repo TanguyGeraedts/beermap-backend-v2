@@ -1,12 +1,13 @@
 package be.tanguy.beermap.api.media.web;
 
-import be.tanguy.beermap.api.common.security.CurrentUser;
+import be.tanguy.beermap.api.common.security.UserIdentity;
 import be.tanguy.beermap.api.common.web.ApiPaths;
 import be.tanguy.beermap.api.media.service.ImageStorageService;
 import be.tanguy.beermap.api.media.web.dto.CreateUploadUrlRequest;
 import be.tanguy.beermap.api.media.web.dto.CreateUploadUrlResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -15,24 +16,25 @@ import org.springframework.web.bind.annotation.*;
 public class ImageController {
 
     private final ImageStorageService imageStorageService;
-    private final CurrentUser currentUser;
 
     @PostMapping(ApiPaths.Images.PRESIGN_PROFILE_PICTURE)
     public CreateUploadUrlResponse createProfilePictureUploadUrl(
+            @AuthenticationPrincipal UserIdentity userIdentity,
             @Valid @RequestBody CreateUploadUrlRequest request
     ) {
         return imageStorageService.createProfilePictureUploadUrl(
-                currentUser.getIdentity(),
+                userIdentity,
                 request.contentType()
         );
     }
 
     @PostMapping(ApiPaths.Images.PRESIGN_DRINK_LOG)
     public CreateUploadUrlResponse createDrinkLogUploadUrl(
+            @AuthenticationPrincipal UserIdentity userIdentity,
             @Valid @RequestBody CreateUploadUrlRequest request
     ) {
         return imageStorageService.createDrinkLogUploadUrl(
-                currentUser.getIdentity(),
+                userIdentity,
                 request.drinkLogId(),
                 request.contentType()
         );
