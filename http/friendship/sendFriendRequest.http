@@ -1,0 +1,73 @@
+### =====================================================
+### Variables
+### =====================================================
+
+@keycloak_base=http://localhost:8081
+@realm=beermap-v2
+@client_id=beermap-backend-v2
+
+@backend_base=http://localhost:8080
+
+@username=test@test.com
+@password=test
+
+@friendship_id=d54c1380-26ec-4f01-ab63-df5e93f19af2
+@user_id=2798b977-9f10-42c4-9c80-02b7b933f683
+### =====================================================
+### Login to Keycloak (Password Grant)
+### =====================================================
+
+POST {{keycloak_base}}/realms/{{realm}}/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+client_id={{client_id}}&
+grant_type=password&
+username={{username}}&
+password={{password}}
+
+> {%
+    client.global.set("access_token", response.body.access_token);
+%}
+
+### =====================================================
+### Friendship Endpoints
+### =====================================================
+
+### Create Friend Request
+POST {{backend_base}}/api/v1/friendships/request
+Content-Type: application/json
+Authorization: Bearer {{access_token}}
+
+{
+  "targetUsername": "tanguy",
+  "targetDiscriminator": "4663"
+}
+
+### =====================================================
+### Cancel Friend Request
+### =====================================================
+
+POST {{backend_base}}/api/v1/friendships/{{friendship_id}}/cancel
+Authorization: Bearer {{access_token}}
+
+
+### =====================================================
+### Get All Friends
+### =====================================================
+
+GET {{backend_base}}/api/v1/friendships/friends
+Authorization: Bearer {{access_token}}
+
+### =====================================================
+### Get Sent Friend Requests
+### =====================================================
+
+GET {{backend_base}}/api/v1/friendships/requests/sent
+Authorization: Bearer {{access_token}}
+
+### =====================================================
+### Get Received Friend Requests
+### =====================================================
+
+GET {{backend_base}}/api/v1/friendships/requests/received
+Authorization: Bearer {{access_token}}

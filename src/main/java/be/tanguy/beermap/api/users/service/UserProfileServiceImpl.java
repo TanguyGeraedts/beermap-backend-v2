@@ -180,7 +180,7 @@ public class UserProfileServiceImpl implements UserProfileService {
         }
 
         throw new InvalidDiscriminatorException(
-                "Failed to generate unique discriminator after " + maxAttempts + " attempts"
+                "Failed to generate unique targetDiscriminator after " + maxAttempts + " attempts"
         );
     }
 

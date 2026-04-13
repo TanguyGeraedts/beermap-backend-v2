@@ -3,14 +3,17 @@ package be.tanguy.beermap.api.friends.service;
 import be.tanguy.beermap.api.common.security.UserIdentity;
 import be.tanguy.beermap.api.friends.domain.Friendship;
 import be.tanguy.beermap.api.friends.domain.FriendshipStatus;
+import be.tanguy.beermap.api.friends.event.FriendshipAcceptedEvent;
 import be.tanguy.beermap.api.friends.exception.*;
 import be.tanguy.beermap.api.friends.repository.FriendshipRepository;
 import be.tanguy.beermap.api.users.domain.AuthIdentity;
 import be.tanguy.beermap.api.users.domain.UserProfile;
+import be.tanguy.beermap.api.users.domain.UserProfileInfo;
 import be.tanguy.beermap.api.users.exception.ProfileNotFoundException;
 import be.tanguy.beermap.api.users.repository.AuthIdentityRepository;
 import be.tanguy.beermap.api.users.repository.UserProfileRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,14 +27,15 @@ public class FriendshipServiceImpl implements FriendshipService {
     private final FriendshipRepository friendshipRepository;
     private final AuthIdentityRepository authIdentityRepository;
     private final UserProfileRepository userProfileRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
-    public Friendship sendFriendRequest(UserIdentity userIdentity, UUID addresseeId) {
+    public Friendship sendFriendRequest(UserIdentity userIdentity, String username, String discriminator) {
         UUID requesterId = getCurrentUserId(userIdentity);
+        UUID addresseeId = resolveUserId(username, discriminator);
 
         validateDifferentUsers(requesterId, addresseeId);
-        ensureUserExists(addresseeId);
 
         Friendship existing = friendshipRepository
                 .findByRequesterIdAndAddresseeIdOrRequesterIdAndAddresseeId(
@@ -52,18 +56,13 @@ public class FriendshipServiceImpl implements FriendshipService {
         return friendshipRepository.save(friendship);
     }
 
-    /**
-     * Reopens a previously cancelled or rejected friend request.
-     * This is kept as a separate, explicit operation so callers are fully
-     * aware they are reusing an existing friendship record.
-     */
     @Override
     @Transactional
-    public Friendship resendFriendRequest(UserIdentity userIdentity, UUID addresseeId) {
+    public Friendship resendFriendRequest(UserIdentity userIdentity, String username, String discriminator) {
         UUID requesterId = getCurrentUserId(userIdentity);
+        UUID addresseeId = resolveUserId(username, discriminator);
 
         validateDifferentUsers(requesterId, addresseeId);
-        ensureUserExists(addresseeId);
 
         Friendship existing = friendshipRepository
                 .findByRequesterIdAndAddresseeIdOrRequesterIdAndAddresseeId(
@@ -98,6 +97,11 @@ public class FriendshipServiceImpl implements FriendshipService {
         }
 
         friendship.accept();
+
+        eventPublisher.publishEvent(
+                new FriendshipAcceptedEvent(friendship.getRequesterId(), friendship.getAddresseeId())
+        );
+
         return friendship;
     }
 
@@ -170,7 +174,6 @@ public class FriendshipServiceImpl implements FriendshipService {
             friendship = Friendship.create(currentUserId, otherUserId);
             friendshipRepository.save(friendship);
         } else if (friendship.isBlocked()) {
-            // Idempotent: already blocked, nothing to do.
             return friendship;
         }
 
@@ -241,6 +244,17 @@ public class FriendshipServiceImpl implements FriendshipService {
                         otherUserId, currentUserId
                 )
                 .orElseThrow(() -> new InvalidFriendshipStateException("Friendship not found"));
+    }
+
+    // --- Helpers ---
+
+    private UUID resolveUserId(String username, String discriminator) {
+        String normalizedUsername = UserProfileInfo.normalizeUsername(username);
+
+        return userProfileRepository
+                .findByInfo_UsernameNormalizedAndInfo_Discriminator(normalizedUsername, discriminator)
+                .map(UserProfile::getId)
+                .orElseThrow(ProfileNotFoundException::new);
     }
 
     private UUID getCurrentUserId(UserIdentity userIdentity) {

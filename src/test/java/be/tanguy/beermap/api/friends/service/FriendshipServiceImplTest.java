@@ -17,6 +17,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.List;
 import java.util.Optional;
@@ -38,6 +39,9 @@ class FriendshipServiceImplTest {
     @Mock
     private UserProfileRepository userProfileRepository;
 
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
+
     @InjectMocks
     private FriendshipServiceImpl service;
 
@@ -45,20 +49,31 @@ class FriendshipServiceImplTest {
     private UUID otherUserId;
     private UserIdentity userIdentity;
 
+    private static final String OTHER_USERNAME = "otheruser";
+    private static final String OTHER_DISCRIMINATOR = "1234";
+
     @BeforeEach
     void setUp() {
         currentUserId = UUID.randomUUID();
         otherUserId = UUID.randomUUID();
         userIdentity = new UserIdentity("issuer", "subject");
 
-        UserProfile profile = mock(UserProfile.class);
-        when(profile.getId()).thenReturn(currentUserId);
+        UserProfile currentProfile = mock(UserProfile.class);
+        when(currentProfile.getId()).thenReturn(currentUserId);
 
         AuthIdentity authIdentity = mock(AuthIdentity.class);
-        when(authIdentity.getUserProfile()).thenReturn(profile);
+        when(authIdentity.getUserProfile()).thenReturn(currentProfile);
 
         when(authIdentityRepository.findByIssuerAndSubject("issuer", "subject"))
                 .thenReturn(Optional.of(authIdentity));
+    }
+
+    // Convenience: stub resolveUserId for send/resend tests
+    private void stubResolveOtherUser() {
+        UserProfile otherProfile = mock(UserProfile.class);
+        when(otherProfile.getId()).thenReturn(otherUserId);
+        when(userProfileRepository.findByInfo_UsernameNormalizedAndInfo_Discriminator(OTHER_USERNAME, OTHER_DISCRIMINATOR))
+                .thenReturn(Optional.of(otherProfile));
     }
 
     // -------------------------------------------------------------------------
@@ -70,14 +85,14 @@ class FriendshipServiceImplTest {
 
         @Test
         void creates_new_friendship_when_none_exists() {
-            when(userProfileRepository.existsById(otherUserId)).thenReturn(true);
+            stubResolveOtherUser();
             when(friendshipRepository.findByRequesterIdAndAddresseeIdOrRequesterIdAndAddresseeId(any(), any(), any(), any()))
                     .thenReturn(Optional.empty());
 
             Friendship saved = Friendship.create(currentUserId, otherUserId);
             when(friendshipRepository.save(any())).thenReturn(saved);
 
-            Friendship result = service.sendFriendRequest(userIdentity, otherUserId);
+            Friendship result = service.sendFriendRequest(userIdentity, OTHER_USERNAME, OTHER_DISCRIMINATOR);
 
             assertThat(result.isPending()).isTrue();
             verify(friendshipRepository).save(any(Friendship.class));
@@ -85,50 +100,57 @@ class FriendshipServiceImplTest {
 
         @Test
         void throws_when_existing_friendship_is_pending() {
-            when(userProfileRepository.existsById(otherUserId)).thenReturn(true);
+            stubResolveOtherUser();
             Friendship existing = Friendship.create(currentUserId, otherUserId);
             when(friendshipRepository.findByRequesterIdAndAddresseeIdOrRequesterIdAndAddresseeId(any(), any(), any(), any()))
                     .thenReturn(Optional.of(existing));
 
-            assertThatThrownBy(() -> service.sendFriendRequest(userIdentity, otherUserId))
+            assertThatThrownBy(() -> service.sendFriendRequest(userIdentity, OTHER_USERNAME, OTHER_DISCRIMINATOR))
                     .isInstanceOf(FriendshipAlreadyExistsException.class);
         }
 
         @Test
         void throws_when_existing_friendship_is_accepted() {
-            when(userProfileRepository.existsById(otherUserId)).thenReturn(true);
+            stubResolveOtherUser();
             Friendship existing = Friendship.create(currentUserId, otherUserId);
             existing.accept();
             when(friendshipRepository.findByRequesterIdAndAddresseeIdOrRequesterIdAndAddresseeId(any(), any(), any(), any()))
                     .thenReturn(Optional.of(existing));
 
-            assertThatThrownBy(() -> service.sendFriendRequest(userIdentity, otherUserId))
+            assertThatThrownBy(() -> service.sendFriendRequest(userIdentity, OTHER_USERNAME, OTHER_DISCRIMINATOR))
                     .isInstanceOf(FriendshipAlreadyExistsException.class);
         }
 
         @Test
         void throws_when_existing_friendship_is_blocked() {
-            when(userProfileRepository.existsById(otherUserId)).thenReturn(true);
+            stubResolveOtherUser();
             Friendship existing = Friendship.create(currentUserId, otherUserId);
             existing.blockAs(currentUserId, otherUserId);
             when(friendshipRepository.findByRequesterIdAndAddresseeIdOrRequesterIdAndAddresseeId(any(), any(), any(), any()))
                     .thenReturn(Optional.of(existing));
 
-            assertThatThrownBy(() -> service.sendFriendRequest(userIdentity, otherUserId))
+            assertThatThrownBy(() -> service.sendFriendRequest(userIdentity, OTHER_USERNAME, OTHER_DISCRIMINATOR))
                     .isInstanceOf(FriendshipBlockedException.class);
         }
 
         @Test
         void throws_when_sending_to_self() {
-            assertThatThrownBy(() -> service.sendFriendRequest(userIdentity, currentUserId))
+            // Resolve returns the current user's own profile
+            UserProfile selfProfile = mock(UserProfile.class);
+            when(selfProfile.getId()).thenReturn(currentUserId);
+            when(userProfileRepository.findByInfo_UsernameNormalizedAndInfo_Discriminator(OTHER_USERNAME, OTHER_DISCRIMINATOR))
+                    .thenReturn(Optional.of(selfProfile));
+
+            assertThatThrownBy(() -> service.sendFriendRequest(userIdentity, OTHER_USERNAME, OTHER_DISCRIMINATOR))
                     .isInstanceOf(CannotFriendYourselfException.class);
         }
 
         @Test
         void throws_when_addressee_not_found() {
-            when(userProfileRepository.existsById(otherUserId)).thenReturn(false);
+            when(userProfileRepository.findByInfo_UsernameNormalizedAndInfo_Discriminator(OTHER_USERNAME, OTHER_DISCRIMINATOR))
+                    .thenReturn(Optional.empty());
 
-            assertThatThrownBy(() -> service.sendFriendRequest(userIdentity, otherUserId))
+            assertThatThrownBy(() -> service.sendFriendRequest(userIdentity, OTHER_USERNAME, OTHER_DISCRIMINATOR))
                     .isInstanceOf(ProfileNotFoundException.class);
         }
     }
@@ -142,26 +164,26 @@ class FriendshipServiceImplTest {
 
         @Test
         void reopens_cancelled_friendship() {
-            when(userProfileRepository.existsById(otherUserId)).thenReturn(true);
+            stubResolveOtherUser();
             Friendship existing = Friendship.create(currentUserId, otherUserId);
             existing.cancel();
             when(friendshipRepository.findByRequesterIdAndAddresseeIdOrRequesterIdAndAddresseeId(any(), any(), any(), any()))
                     .thenReturn(Optional.of(existing));
 
-            Friendship result = service.resendFriendRequest(userIdentity, otherUserId);
+            Friendship result = service.resendFriendRequest(userIdentity, OTHER_USERNAME, OTHER_DISCRIMINATOR);
 
             assertThat(result.isPending()).isTrue();
         }
 
         @Test
         void reopens_rejected_friendship() {
-            when(userProfileRepository.existsById(otherUserId)).thenReturn(true);
+            stubResolveOtherUser();
             Friendship existing = Friendship.create(otherUserId, currentUserId);
             existing.reject();
             when(friendshipRepository.findByRequesterIdAndAddresseeIdOrRequesterIdAndAddresseeId(any(), any(), any(), any()))
                     .thenReturn(Optional.of(existing));
 
-            Friendship result = service.resendFriendRequest(userIdentity, otherUserId);
+            Friendship result = service.resendFriendRequest(userIdentity, OTHER_USERNAME, OTHER_DISCRIMINATOR);
 
             assertThat(result.isPending()).isTrue();
             assertThat(result.getRequesterId()).isEqualTo(currentUserId);
@@ -169,34 +191,34 @@ class FriendshipServiceImplTest {
 
         @Test
         void throws_when_friendship_is_blocked() {
-            when(userProfileRepository.existsById(otherUserId)).thenReturn(true);
+            stubResolveOtherUser();
             Friendship existing = Friendship.create(currentUserId, otherUserId);
             existing.blockAs(currentUserId, otherUserId);
             when(friendshipRepository.findByRequesterIdAndAddresseeIdOrRequesterIdAndAddresseeId(any(), any(), any(), any()))
                     .thenReturn(Optional.of(existing));
 
-            assertThatThrownBy(() -> service.resendFriendRequest(userIdentity, otherUserId))
+            assertThatThrownBy(() -> service.resendFriendRequest(userIdentity, OTHER_USERNAME, OTHER_DISCRIMINATOR))
                     .isInstanceOf(FriendshipBlockedException.class);
         }
 
         @Test
         void throws_when_friendship_already_pending() {
-            when(userProfileRepository.existsById(otherUserId)).thenReturn(true);
+            stubResolveOtherUser();
             Friendship existing = Friendship.create(currentUserId, otherUserId);
             when(friendshipRepository.findByRequesterIdAndAddresseeIdOrRequesterIdAndAddresseeId(any(), any(), any(), any()))
                     .thenReturn(Optional.of(existing));
 
-            assertThatThrownBy(() -> service.resendFriendRequest(userIdentity, otherUserId))
+            assertThatThrownBy(() -> service.resendFriendRequest(userIdentity, OTHER_USERNAME, OTHER_DISCRIMINATOR))
                     .isInstanceOf(FriendshipAlreadyExistsException.class);
         }
 
         @Test
         void throws_when_no_previous_friendship_exists() {
-            when(userProfileRepository.existsById(otherUserId)).thenReturn(true);
+            stubResolveOtherUser();
             when(friendshipRepository.findByRequesterIdAndAddresseeIdOrRequesterIdAndAddresseeId(any(), any(), any(), any()))
                     .thenReturn(Optional.empty());
 
-            assertThatThrownBy(() -> service.resendFriendRequest(userIdentity, otherUserId))
+            assertThatThrownBy(() -> service.resendFriendRequest(userIdentity, OTHER_USERNAME, OTHER_DISCRIMINATOR))
                     .isInstanceOf(InvalidFriendshipStateException.class);
         }
     }
@@ -360,7 +382,6 @@ class FriendshipServiceImplTest {
             Friendship result = service.blockUser(userIdentity, otherUserId);
 
             assertThat(result.isBlocked()).isTrue();
-            // blockAs() should NOT be called again
             verify(friendshipRepository, never()).save(any());
         }
 
@@ -392,7 +413,6 @@ class FriendshipServiceImplTest {
 
         @Test
         void throws_when_current_user_is_not_the_blocker() {
-            // otherUserId blocked currentUserId — requester is otherUserId
             Friendship existing = Friendship.create(currentUserId, otherUserId);
             existing.blockAs(otherUserId, currentUserId);
             when(friendshipRepository.findByRequesterIdAndAddresseeIdOrRequesterIdAndAddresseeId(any(), any(), any(), any()))
@@ -458,7 +478,6 @@ class FriendshipServiceImplTest {
             List<Friendship> result = service.getAcceptedFriendships(userIdentity);
 
             assertThat(result).hasSize(1);
-            // Verify only one query was made (not two separate requester/addressee queries)
             verify(friendshipRepository).findAllByUserIdAndStatus(currentUserId, FriendshipStatus.ACCEPTED);
             verify(friendshipRepository, never()).findAllByRequesterIdAndStatus(any(), any());
             verify(friendshipRepository, never()).findAllByAddresseeIdAndStatus(any(), any());

@@ -6,7 +6,7 @@ import org.springframework.http.HttpStatus;
 public class UsernameDiscriminatorAlreadyTakenException extends ApiException {
 
     public UsernameDiscriminatorAlreadyTakenException(String username, String discriminator) {
-        super("Username/discriminator already taken: " + username + "#" + discriminator);
+        super("Username/targetDiscriminator already taken: " + username + "#" + discriminator);
     }
 
     @Override public HttpStatus getStatus() { return HttpStatus.CONFLICT; }

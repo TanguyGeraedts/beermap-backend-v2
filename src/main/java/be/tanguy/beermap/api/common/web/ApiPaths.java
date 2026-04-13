@@ -59,10 +59,15 @@ public final class ApiPaths {
         public static final String REMOVE = "/remove";
         public static final String BLOCK = "/block";
 
+        public static final String RESEND = "/resend";
+        public static final String UNBLOCK = "/unblock";
+
         public static final String INCOMING = "/incoming";
         public static final String OUTGOING = "/outgoing";
         public static final String FRIENDS = "/friends";
         public static final String BLOCKED = "/blocked";
+
+        public static final String BY_USER = "/{userId}";
 
         private Friendships() {}
     }

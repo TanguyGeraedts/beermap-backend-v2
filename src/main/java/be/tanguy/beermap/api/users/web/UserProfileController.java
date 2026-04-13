@@ -1,6 +1,6 @@
 package be.tanguy.beermap.api.users.web;
 
-import be.tanguy.beermap.api.common.security.CurrentUser;
+import be.tanguy.beermap.api.common.security.UserIdentity;
 import be.tanguy.beermap.api.common.web.ApiPaths;
 import be.tanguy.beermap.api.users.domain.UserProfile;
 import be.tanguy.beermap.api.users.service.UserProfileService;
@@ -9,6 +9,7 @@ import be.tanguy.beermap.api.users.web.dto.MeResponse;
 import be.tanguy.beermap.api.users.web.dto.UpdateProfileRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -17,19 +18,23 @@ import org.springframework.web.bind.annotation.*;
 public class UserProfileController {
 
     private final UserProfileService userProfileService;
-    private final CurrentUser currentUser;
 
     @GetMapping(ApiPaths.Users.ME)
-    public MeResponse getMe() {
+    public MeResponse getMe(
+            @AuthenticationPrincipal UserIdentity userIdentity
+    ) {
         return MeResponse.from(
-                userProfileService.getCurrentUser(currentUser.getIdentity())
+                userProfileService.getCurrentUser(userIdentity)
         );
     }
 
     @PostMapping(ApiPaths.Users.ME)
-    public MeResponse createMe(@Valid @RequestBody CreateProfileRequest request){
+    public MeResponse createMe(
+            @AuthenticationPrincipal UserIdentity userIdentity,
+            @Valid @RequestBody CreateProfileRequest request
+    ) {
         UserProfile userProfile = userProfileService.createUser(
-                currentUser.getIdentity(),
+                userIdentity,
                 request.username(),
                 request.bio(),
                 request.avatarUrl()
@@ -39,10 +44,13 @@ public class UserProfileController {
     }
 
     @PatchMapping(ApiPaths.Users.ME)
-    public MeResponse updateMe(@Valid @RequestBody UpdateProfileRequest request) {
+    public MeResponse updateMe(
+            @AuthenticationPrincipal UserIdentity userIdentity,
+            @Valid @RequestBody UpdateProfileRequest request
+    ) {
         return MeResponse.from(
                 userProfileService.updateProfile(
-                        currentUser.getIdentity(),
+                        userIdentity,
                         request.username(),
                         request.bio(),
                         request.avatarUrl(),

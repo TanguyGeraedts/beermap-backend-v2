@@ -8,9 +8,9 @@ import java.util.UUID;
 
 public interface FriendshipService {
 
-    Friendship sendFriendRequest(UserIdentity userIdentity, UUID addresseeId);
+    Friendship sendFriendRequest(UserIdentity userIdentity, String username, String discriminator);
 
-    Friendship resendFriendRequest(UserIdentity userIdentity, UUID addresseeId);
+    Friendship resendFriendRequest(UserIdentity userIdentity, String username, String discriminator);
 
     Friendship acceptFriendRequest(UserIdentity userIdentity, UUID requesterId);
 
