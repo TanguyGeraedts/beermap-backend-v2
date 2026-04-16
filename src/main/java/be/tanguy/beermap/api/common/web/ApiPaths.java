@@ -7,6 +7,7 @@ public final class ApiPaths {
     public static final String API = "/api";
     public static final String V1 = API + "/v1";
 
+
     public static final class Users {
         public static final String BASE = V1 + "/users";
 
@@ -70,5 +71,13 @@ public final class ApiPaths {
         public static final String BY_USER = "/{userId}";
 
         private Friendships() {}
+    }
+
+    public static final class DrinkLog{
+        public static final String BASE = V1 + "/drink-logs";
+
+        public static final String ME = "/me";
+        public static final String ID = "/{logId}";
+
     }
 }

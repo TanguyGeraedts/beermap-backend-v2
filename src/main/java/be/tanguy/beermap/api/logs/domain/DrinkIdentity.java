@@ -16,6 +16,7 @@ import java.util.UUID;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class DrinkIdentity {
+
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "category", nullable = false, length = 50)
@@ -27,19 +28,93 @@ public class DrinkIdentity {
     @Column(name = "catalog_item_id")
     private UUID catalogItemId;
 
-    @Column(name = "catalog_item_name")
+    @Column(name = "catalog_item_name", length = 255)
     private String catalogItemName;
 
-    @Column(name = "custom_drink_name")
+    @Column(name = "custom_drink_name", length = 255)
     private String customDrinkName;
 
     @Column(name = "abv_percent", precision = 5, scale = 2)
     private BigDecimal abvPercent;
 
+    // -------------------------------------------------------------------------
+    // Factory methods
+    // -------------------------------------------------------------------------
+
+    public static DrinkIdentity forCatalog(
+            UUID catalogItemId,
+            String catalogItemName,
+            DrinkCategory category,
+            String subType,
+            BigDecimal abvPercent
+    ) {
+        if (catalogItemId == null)                          throw new IllegalArgumentException("catalogItemId is required");
+        if (catalogItemName == null || catalogItemName.isBlank()) throw new IllegalArgumentException("catalogItemName is required");
+        if (category == null)                               throw new IllegalArgumentException("category is required");
+
+        DrinkIdentity id = new DrinkIdentity();
+        id.catalogItemId   = catalogItemId;
+        id.catalogItemName = catalogItemName.trim();
+        id.category        = category;
+        id.subType         = normalizeNullable(subType);
+        id.abvPercent      = abvPercent;
+        id.customDrinkName = null;
+        return id;
+    }
+
+    public static DrinkIdentity forCustom(
+            String customDrinkName,
+            DrinkCategory category,
+            String subType,
+            BigDecimal abvPercent
+    ) {
+        if (customDrinkName == null || customDrinkName.isBlank()) throw new IllegalArgumentException("customDrinkName is required");
+        if (category == null)                                      throw new IllegalArgumentException("category is required");
+
+        DrinkIdentity id = new DrinkIdentity();
+        id.customDrinkName = customDrinkName.trim();
+        id.category        = category;
+        id.subType         = normalizeNullable(subType);
+        id.abvPercent      = abvPercent;
+        id.catalogItemId   = null;
+        id.catalogItemName = null;
+        return id;
+    }
+
+    // -------------------------------------------------------------------------
+    // Mutation
+    // -------------------------------------------------------------------------
+
+    /**
+     * Partially updates mutable identity fields. Only non-null values are applied.
+     * {@code category}, {@code subType}, and {@code abvPercent} are patchable;
+     * catalog/custom name fields are immutable after creation.
+     */
+    public void update(DrinkCategory category, String subType, BigDecimal abvPercent) {
+        if (category != null)    this.category  = category;
+        if (subType != null)     this.subType   = normalizeNullable(subType);
+        if (abvPercent != null)  this.abvPercent = abvPercent;
+    }
+
+    // -------------------------------------------------------------------------
+    // Query helpers
+    // -------------------------------------------------------------------------
+
     public String getDisplayName() {
         return catalogItemId != null ? catalogItemName : customDrinkName;
     }
 
-    //To-do
-    // Static factory methods for Catalog vs Custom here.
+    public boolean isCatalog() {
+        return catalogItemId != null;
+    }
+
+    // -------------------------------------------------------------------------
+    // Private helpers
+    // -------------------------------------------------------------------------
+
+    private static String normalizeNullable(String value) {
+        if (value == null) return null;
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
+    }
 }

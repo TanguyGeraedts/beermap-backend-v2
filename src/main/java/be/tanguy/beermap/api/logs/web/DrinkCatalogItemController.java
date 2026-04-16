@@ -1,14 +1,19 @@
 package be.tanguy.beermap.api.logs.web;
 
+import be.tanguy.beermap.api.common.security.IsAdmin;
 import be.tanguy.beermap.api.common.web.ApiPaths;
 import be.tanguy.beermap.api.logs.domain.DrinkCatalogItem;
 import be.tanguy.beermap.api.logs.domain.DrinkCategory;
 import be.tanguy.beermap.api.logs.service.DrinkCatalogItemService;
+import be.tanguy.beermap.api.logs.web.dto.CreateDrinkCatalogItemRequest;
+import be.tanguy.beermap.api.logs.web.dto.DrinkCatalogItemResponse;
+import be.tanguy.beermap.api.logs.web.dto.UpdateDrinkCatalogItemRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,6 +31,7 @@ public class DrinkCatalogItemController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+   @IsAdmin
     public DrinkCatalogItemResponse create(@Valid @RequestBody CreateDrinkCatalogItemRequest request) {
         return DrinkCatalogItemResponse.from(
                 drinkCatalogItemService.create(
@@ -38,6 +44,7 @@ public class DrinkCatalogItemController {
     }
 
     @PutMapping("/{id}")
+    @IsAdmin
     public DrinkCatalogItemResponse update(
             @PathVariable UUID id,
             @Valid @RequestBody UpdateDrinkCatalogItemRequest request
@@ -108,43 +115,9 @@ public class DrinkCatalogItemController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @IsAdmin
     public void delete(@PathVariable UUID id) {
         drinkCatalogItemService.delete(id);
     }
 
-    public record CreateDrinkCatalogItemRequest(
-            @NotBlank String name,
-            @NotNull DrinkCategory category,
-            String subType,
-            BigDecimal abvPercent
-    ) {}
-
-    public record UpdateDrinkCatalogItemRequest(
-            @NotBlank String name,
-            @NotNull DrinkCategory category,
-            String subType,
-            BigDecimal abvPercent
-    ) {}
-
-    public record DrinkCatalogItemResponse(
-            UUID id,
-            String name,
-            String normalizedName,
-            DrinkCategory category,
-            String subType,
-            String normalizedSubType,
-            BigDecimal abvPercent
-    ) {
-        public static DrinkCatalogItemResponse from(DrinkCatalogItem item) {
-            return new DrinkCatalogItemResponse(
-                    item.getId(),
-                    item.getName(),
-                    item.getNormalizedName(),
-                    item.getCategory(),
-                    item.getSubType(),
-                    item.getNormalizedSubType(),
-                    item.getAbvPercent()
-            );
-        }
-    }
 }

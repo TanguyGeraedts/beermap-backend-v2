@@ -1,12 +1,16 @@
 package be.tanguy.beermap.api.logs.domain;
 
 import be.tanguy.beermap.api.common.domain.Location;
+import be.tanguy.beermap.api.common.persistence.AbstractBaseObject;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.UUID;
+
 
 @Getter
 @Entity
@@ -14,16 +18,12 @@ import java.util.UUID;
 @Table(
         name = "drink_log",
         indexes = {
-                @Index(name = "idx_drink_log_user_id", columnList = "user_id"),
+                @Index(name = "idx_drink_log_user_id",    columnList = "user_id"),
                 @Index(name = "idx_drink_log_consumed_at", columnList = "consumed_at")
         }
 )
 @Access(AccessType.FIELD)
-public class DrinkLog {
-
-    @Id
-    @Column(name = "id", nullable = false, updatable = false)
-    private UUID id;
+public class DrinkLog extends AbstractBaseObject {
 
     @Column(name = "user_id", nullable = false, updatable = false)
     private UUID userId;
@@ -37,36 +37,66 @@ public class DrinkLog {
     @Embedded
     private Location location;
 
-    private DrinkLog(UUID userId, DrinkIdentity identity, ConsumptionDetails consumption, Location location) {
-        this.id = UUID.randomUUID();
-        this.userId = userId;
-        this.identity = identity;
-        this.consumption = consumption;
-        this.location = location;
-    }
+    // -------------------------------------------------------------------------
+    // Factory method
+    // -------------------------------------------------------------------------
 
     /**
      * Creates a new DrinkLog entry.
-     * Validates that the entry is tied to a specific user and contains
-     * the necessary identity and consumption metadata.
      */
-    public static DrinkLog create(UUID userId, DrinkIdentity identity, ConsumptionDetails consumption, Location location) {
-        if (userId == null) throw new IllegalArgumentException("User ID is required");
-        if (identity == null) throw new IllegalArgumentException("Drink identity is required");
+    public static DrinkLog create(
+            UUID userId,
+            DrinkIdentity identity,
+            ConsumptionDetails consumption,
+            Location location
+    ) {
+        if (userId == null)      throw new IllegalArgumentException("userId is required");
+        if (identity == null)    throw new IllegalArgumentException("Drink identity is required");
         if (consumption == null) throw new IllegalArgumentException("Consumption details are required");
 
-        return new DrinkLog(userId, identity, consumption, location);
+        DrinkLog log = new DrinkLog();
+        log.id          = UUID.randomUUID();
+        log.userId      = userId;
+        log.identity    = identity;
+        log.consumption = consumption;
+        log.location    = location;
+        return log;
     }
 
-    public String getDisplayName() {
-        return identity.getDisplayName();
+    // -------------------------------------------------------------------------
+    // Mutation
+    // -------------------------------------------------------------------------
+
+    /**
+     * Partially updates this log entry. Only non-null arguments are applied.
+     * Pass an empty string to {@code subType} or {@code description} to clear them.
+     */
+    public void update(
+            Instant consumedAt,
+            Integer quantity,
+            Integer volumeMl,
+            BigDecimal abvPercent,
+            DrinkCategory category,
+            String subType,
+            Integer rating,
+            String description,
+            String photoUrl,
+            Double latitude,
+            Double longitude
+    ) {
+        identity.update(category, subType, abvPercent);
+        consumption.update(consumedAt, quantity, volumeMl, rating, description, photoUrl);
+
+        if (latitude != null || longitude != null) {
+            this.location = new Location(latitude, longitude);
+        }
     }
 
-    public boolean isCatalogDrink() {
-        return identity.getCatalogItemId() != null;
-    }
+    // -------------------------------------------------------------------------
+    // Query helpers
+    // -------------------------------------------------------------------------
 
-    public boolean isCustomDrink() {
-        return identity.getCustomDrinkName() != null;
-    }
+    public boolean isCatalogDrink()  { return identity.isCatalog(); }
+    public boolean isCustomDrink()   { return !identity.isCatalog(); }
+    public String  getDisplayName()  { return identity.getDisplayName(); }
 }
