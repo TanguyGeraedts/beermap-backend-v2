@@ -52,7 +52,7 @@ public class ConsumptionDetails {
     ) {
         ConsumptionDetails d = new ConsumptionDetails();
         d.consumedAt  = consumedAt != null ? consumedAt : Instant.now();
-        d.quantity    = quantity > 0 ? quantity : 1;
+        d.quantity    = requirePositiveQuantity(quantity);
         d.volumeMl    = normalizePositiveOrNull(volumeMl);
         d.rating      = rating;
         d.description = normalizeNullable(description);
@@ -76,7 +76,7 @@ public class ConsumptionDetails {
             String photoUrl
     ) {
         if (consumedAt != null)  this.consumedAt  = consumedAt;
-        if (quantity != null)    this.quantity    = quantity > 0 ? quantity : 1;
+        if (quantity != null)    this.quantity    = requirePositiveQuantity(quantity);
         if (volumeMl != null)    this.volumeMl    = volumeMl > 0 ? volumeMl : null;
         if (rating != null)      this.rating      = rating;
         if (description != null) this.description = normalizeNullable(description);
@@ -96,5 +96,13 @@ public class ConsumptionDetails {
     private static Integer normalizePositiveOrNull(Integer value) {
         if (value == null) return null;
         return value > 0 ? value : null;
+    }
+
+    private static int requirePositiveQuantity(int quantity) {
+        if (quantity <= 0) {
+            throw new IllegalArgumentException("quantity must be positive");
+        }
+
+        return quantity;
     }
 }

@@ -1,15 +1,20 @@
 package be.tanguy.beermap.api.users.web.dto;
 
+import be.tanguy.beermap.api.common.validation.AllowedContent;
 import be.tanguy.beermap.api.common.validation.ValidUsername;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 import static be.tanguy.beermap.api.users.domain.UserProfileInfo.MAX_AVATAR_URL_LENGTH;
 import static be.tanguy.beermap.api.users.domain.UserProfileInfo.MAX_BIO_LENGTH;
 
 public record CreateProfileRequest(
-        @ValidUsername(allowNull = true)
+        @NotBlank
+        @AllowedContent
+        @ValidUsername
         String username,
 
+        @AllowedContent
         @Size(max = MAX_BIO_LENGTH, message = "Bio must be at most " + MAX_BIO_LENGTH + " characters long")
         String bio,
 

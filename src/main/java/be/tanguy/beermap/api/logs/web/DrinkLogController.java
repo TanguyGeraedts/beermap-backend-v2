@@ -6,6 +6,7 @@ import be.tanguy.beermap.api.logs.service.DrinkLogService;
 import be.tanguy.beermap.api.logs.web.dto.DrinkLogResponse;
 import be.tanguy.beermap.api.logs.web.dto.LogDrinkRequest;
 import be.tanguy.beermap.api.logs.web.dto.UpdateDrinkLogRequest;
+import be.tanguy.beermap.api.users.service.UserProfileService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -23,6 +24,7 @@ import java.util.UUID;
 public class DrinkLogController {
 
     private final DrinkLogService drinkLogService;
+    private final UserProfileService userProfileService;
 
     @PostMapping(ApiPaths.DrinkLog.ME)
     @ResponseStatus(HttpStatus.CREATED)
@@ -30,7 +32,7 @@ public class DrinkLogController {
             @AuthenticationPrincipal UserIdentity userIdentity,
             @Valid @RequestBody LogDrinkRequest request
     ) {
-        UUID userId = UUID.fromString(userIdentity.subject());
+        UUID userId = currentUserId(userIdentity);
         return DrinkLogResponse.from(
                 drinkLogService.logDrink(request.toCommand(userId))
         );
@@ -41,7 +43,7 @@ public class DrinkLogController {
             @AuthenticationPrincipal UserIdentity userIdentity,
             @PageableDefault(size = 20) Pageable pageable
     ) {
-        UUID userId = UUID.fromString(userIdentity.subject());
+        UUID userId = currentUserId(userIdentity);
         return drinkLogService.getTimeline(userId, pageable)
                 .map(DrinkLogResponse::from);
     }
@@ -51,7 +53,7 @@ public class DrinkLogController {
             @AuthenticationPrincipal UserIdentity userIdentity,
             @PathVariable UUID logId
     ) {
-        UUID userId = UUID.fromString(userIdentity.subject());
+        UUID userId = currentUserId(userIdentity);
         return DrinkLogResponse.from(
                 drinkLogService.getLog(userId, logId)
         );
@@ -63,7 +65,7 @@ public class DrinkLogController {
             @PathVariable UUID logId,
             @Valid @RequestBody UpdateDrinkLogRequest request
     ) {
-        UUID userId = UUID.fromString(userIdentity.subject());
+        UUID userId = currentUserId(userIdentity);
         return DrinkLogResponse.from(
                 drinkLogService.updateLog(request.toCommand(userId, logId))
         );
@@ -75,7 +77,11 @@ public class DrinkLogController {
             @AuthenticationPrincipal UserIdentity userIdentity,
             @PathVariable UUID logId
     ) {
-        UUID userId = UUID.fromString(userIdentity.subject());
+        UUID userId = currentUserId(userIdentity);
         drinkLogService.deleteLog(userId, logId);
+    }
+
+    private UUID currentUserId(UserIdentity userIdentity) {
+        return userProfileService.getCurrentUser(userIdentity).getId();
     }
 }
