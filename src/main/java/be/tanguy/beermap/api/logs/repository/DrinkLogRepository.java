@@ -53,25 +53,86 @@ public interface DrinkLogRepository extends JpaRepository<DrinkLog, UUID> {
     @Query(value = """
             SELECT
               ((l.consumed_at AT TIME ZONE 'UTC')::date) AS day,
-              COALESCE(SUM(l.quantity), 0) AS beers
+              COALESCE(SUM(l.quantity), 0) AS drinks
             FROM drink_log l
             WHERE l.user_id = :userId
             GROUP BY ((l.consumed_at AT TIME ZONE 'UTC')::date)
             ORDER BY day
             """, nativeQuery = true)
-    List<Object[]> sumBeersPerUtcDay(@Param("userId") UUID userId);
+    List<Object[]> sumDrinksPerUtcDay(@Param("userId") UUID userId);
 
     @Query(value = """
             SELECT
               EXTRACT(ISOYEAR FROM (l.consumed_at AT TIME ZONE 'UTC'))::int AS iso_year,
               EXTRACT(WEEK    FROM (l.consumed_at AT TIME ZONE 'UTC'))::int AS iso_week,
-              COALESCE(SUM(l.quantity), 0) AS beers
+              COALESCE(SUM(l.quantity), 0) AS drinks
             FROM drink_log l
             WHERE l.user_id = :userId
             GROUP BY iso_year, iso_week
             ORDER BY iso_year, iso_week
             """, nativeQuery = true)
-    List<Object[]> sumBeersPerUtcIsoWeek(@Param("userId") UUID userId);
+    List<Object[]> sumDrinksPerUtcIsoWeek(@Param("userId") UUID userId);
+
+    @Query(value = """
+            SELECT
+              l.category AS category,
+              COALESCE(SUM(l.quantity), 0) AS drinks
+            FROM drink_log l
+            WHERE l.user_id = :userId
+            GROUP BY l.category
+            ORDER BY drinks DESC, l.category ASC
+            """, nativeQuery = true)
+    List<Object[]> sumQuantityByCategory(@Param("userId") UUID userId);
+
+    @Query(value = """
+            SELECT
+              COALESCE(l.catalog_item_name, l.custom_drink_name) AS drink_name,
+              l.category AS category,
+              COALESCE(SUM(l.quantity), 0) AS drinks
+            FROM drink_log l
+            WHERE l.user_id = :userId
+            GROUP BY COALESCE(l.catalog_item_name, l.custom_drink_name), l.category
+            ORDER BY drinks DESC, drink_name ASC
+            LIMIT 1
+            """, nativeQuery = true)
+    List<Object[]> findFavoriteDrink(@Param("userId") UUID userId);
+
+    @Query(value = """
+            SELECT
+              COALESCE(l.catalog_item_name, l.custom_drink_name) AS drink_name,
+              l.category AS category,
+              COALESCE(SUM(l.quantity), 0) AS drinks
+            FROM drink_log l
+            WHERE l.user_id = :userId
+              AND l.consumed_at >= :fromInclusive
+              AND l.consumed_at < :toExclusive
+            GROUP BY COALESCE(l.catalog_item_name, l.custom_drink_name), l.category
+            ORDER BY drinks DESC, drink_name ASC
+            LIMIT 1
+            """, nativeQuery = true)
+    List<Object[]> findFavoriteDrinkBetween(
+            @Param("userId") UUID userId,
+            @Param("fromInclusive") Instant fromInclusive,
+            @Param("toExclusive") Instant toExclusive
+    );
+
+    @Query(value = """
+            SELECT
+              l.category AS category,
+              COALESCE(SUM(l.quantity), 0) AS drinks
+            FROM drink_log l
+            WHERE l.user_id = :userId
+              AND l.consumed_at >= :fromInclusive
+              AND l.consumed_at < :toExclusive
+            GROUP BY l.category
+            ORDER BY drinks DESC, l.category ASC
+            LIMIT 1
+            """, nativeQuery = true)
+    List<Object[]> findFavoriteCategoryBetween(
+            @Param("userId") UUID userId,
+            @Param("fromInclusive") Instant fromInclusive,
+            @Param("toExclusive") Instant toExclusive
+    );
 
     @Query(value = """
             SELECT EXTRACT(HOUR FROM (l.consumed_at AT TIME ZONE 'UTC'))::int AS hour

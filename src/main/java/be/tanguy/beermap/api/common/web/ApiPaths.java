@@ -80,4 +80,12 @@ public final class ApiPaths {
         public static final String ID = "/{logId}";
 
     }
+
+    public static final class Stats {
+        public static final String BASE = V1 + "/stats";
+
+        public static final String ME = "/me";
+
+        private Stats() {}
+    }
 }
