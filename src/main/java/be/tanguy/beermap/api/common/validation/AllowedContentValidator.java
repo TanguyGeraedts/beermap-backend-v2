@@ -4,9 +4,11 @@ import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
 import java.text.Normalizer;
+import java.util.Arrays;
 import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class AllowedContentValidator implements ConstraintValidator<AllowedContent, String> {
 
@@ -46,7 +48,8 @@ public class AllowedContentValidator implements ConstraintValidator<AllowedConte
             return Set.of();
         }
 
-        return Set.of(normalized.split("\\s+"));
+        return Arrays.stream(normalized.split("\\s+"))
+                .collect(Collectors.toSet());
     }
 
     private static String codePoints(int... codePoints) {

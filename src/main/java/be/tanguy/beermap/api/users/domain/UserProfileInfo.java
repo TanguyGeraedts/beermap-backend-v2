@@ -18,7 +18,7 @@ public class UserProfileInfo {
 
     public static final int DISCRIMINATOR_LENGTH = 4;
 
-    public static final int MAX_BIO_LENGTH = 500;
+    public static final int MAX_BIO_LENGTH = 180;
     public static final int MAX_AVATAR_URL_LENGTH = 2048;
 
     public static final String USERNAME_REGEX = "^[a-zA-Z0-9._-]+$";
