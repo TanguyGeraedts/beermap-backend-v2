@@ -1,6 +1,7 @@
 package be.tanguy.beermap.api.logs.service;
 
 import be.tanguy.beermap.api.common.domain.Location;
+import be.tanguy.beermap.api.logs.event.DrinkLogCreatedEvent;
 import be.tanguy.beermap.api.logs.domain.*;
 import be.tanguy.beermap.api.logs.exception.DrinkCatalogItemNotFoundException;
 import be.tanguy.beermap.api.logs.repository.DrinkCatalogItemRepository;
@@ -9,6 +10,7 @@ import be.tanguy.beermap.api.logs.service.command.LogDrinkCommand;
 import be.tanguy.beermap.api.logs.service.command.UpdateDrinkLogCommand;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -23,12 +25,12 @@ import java.util.UUID;
 @Transactional
 public class DrinkLogServiceImpl implements DrinkLogService {
 
+    /// Events
+    private final ApplicationEventPublisher eventPublisher;
+
+    /// Repositories
     private final DrinkLogRepository drinkLogRepository;
     private final DrinkCatalogItemRepository drinkCatalogItemRepository;
-
-    // -------------------------------------------------------------------------
-    // Write operations
-    // -------------------------------------------------------------------------
 
     @Override
     public DrinkLog logDrink(LogDrinkCommand cmd) {
@@ -50,6 +52,8 @@ public class DrinkLogServiceImpl implements DrinkLogService {
         Location location = toLocation(cmd.latitude(), cmd.longitude());
 
         DrinkLog saved = drinkLogRepository.save(DrinkLog.create(cmd.userId(), identity, cons, location));
+
+        eventPublisher.publishEvent(DrinkLogCreatedEvent.create(cmd.userId(), saved.getId()));
 
         log.info("logDrink created: logId={}, userId={}, type={}, category={}, subType={}, volumeMl={}",
                 saved.getId(), cmd.userId(), cmd.isCatalog() ? "catalog" : "custom",
