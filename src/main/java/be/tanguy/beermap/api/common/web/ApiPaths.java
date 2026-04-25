@@ -88,4 +88,10 @@ public final class ApiPaths {
 
         private Stats() {}
     }
+
+    public static final class Feed {
+        public static final String BASE = V1 + "/feed";
+
+        private Feed() {}
+    }
 }

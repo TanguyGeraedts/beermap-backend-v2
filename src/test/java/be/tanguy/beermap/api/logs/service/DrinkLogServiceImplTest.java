@@ -12,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -25,6 +26,7 @@ class DrinkLogServiceImplTest {
 
     @Mock private DrinkLogRepository drinkLogRepository;
     @Mock private DrinkCatalogItemRepository drinkCatalogItemRepository;
+    @Mock private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private DrinkLogServiceImpl service;
