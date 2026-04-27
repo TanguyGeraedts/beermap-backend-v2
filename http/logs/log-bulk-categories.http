@@ -1,0 +1,139 @@
+### =====================================================
+### Variables
+### =====================================================
+
+@keycloak_base=http://localhost:8081
+@realm=beermap-v2
+@client_id=beermap-backend-v2
+
+@backend_base=http://localhost:8080
+
+@username=tanguy@test.com
+@password=test
+
+
+### =====================================================
+### Login to Keycloak (Password Grant - DEV ONLY)
+### =====================================================
+
+POST {{keycloak_base}}/realms/{{realm}}/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+client_id={{client_id}}&
+grant_type=password&
+username={{username}}&
+password={{password}}
+
+> {%
+    client.global.set("access_token", response.body.access_token);
+%}
+
+
+### =====================================================
+### POST /api/v1/drink-logs/me
+### - BEER
+### =====================================================
+
+POST {{backend_base}}/api/v1/drink-logs/me
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "customDrinkName": "Bulk Test Beer",
+  "category": "BEER",
+  "subType": "LAGER",
+  "quantity": 1,
+  "rating": 7,
+  "description": "Bulk category test: BEER"
+}
+
+
+### =====================================================
+### POST /api/v1/drink-logs/me
+### - WINE
+### =====================================================
+
+POST {{backend_base}}/api/v1/drink-logs/me
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "customDrinkName": "Bulk Test Wine",
+  "category": "WINE",
+  "subType": "RED",
+  "quantity": 1,
+  "rating": 8,
+  "description": "Bulk category test: WINE"
+}
+
+
+### =====================================================
+### POST /api/v1/drink-logs/me
+### - COCKTAIL
+### =====================================================
+
+POST {{backend_base}}/api/v1/drink-logs/me
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "customDrinkName": "Bulk Test Cocktail",
+  "category": "COCKTAIL",
+  "subType": "SPRITZ",
+  "quantity": 1,
+  "rating": 8,
+  "description": "Bulk category test: COCKTAIL"
+}
+
+
+### =====================================================
+### POST /api/v1/drink-logs/me
+### - SPIRITS
+### =====================================================
+
+POST {{backend_base}}/api/v1/drink-logs/me
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "customDrinkName": "Bulk Test Spirit",
+  "category": "SPIRITS",
+  "subType": "WHISKY",
+  "quantity": 1,
+  "rating": 7,
+  "description": "Bulk category test: SPIRITS"
+}
+
+
+### =====================================================
+### POST /api/v1/drink-logs/me
+### - OTHER
+### =====================================================
+
+POST {{backend_base}}/api/v1/drink-logs/me
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "customDrinkName": "Bulk Test Other",
+  "category": "OTHER",
+  "subType": "KOMBUCHA",
+  "quantity": 1,
+  "rating": 6,
+  "description": "Bulk category test: OTHER"
+}
+
+
+### =====================================================
+### GET /api/v1/feed
+### - Verify feed items for all categories
+### =====================================================
+
+GET {{backend_base}}/api/v1/feed?limit=50
+Authorization: Bearer {{access_token}}
+Accept: application/json

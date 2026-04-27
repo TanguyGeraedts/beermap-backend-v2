@@ -91,6 +91,8 @@ public final class ApiPaths {
 
     public static final class Feed {
         public static final String BASE = V1 + "/feed";
+        public static final String ID = "/{feedItemId}";
+        public static final String CHEERS = ID + "/cheers";
 
         private Feed() {}
     }

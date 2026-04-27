@@ -16,5 +16,7 @@ public record FeedItemResponse(
         FeedVisibility visibility,
         String metadataJson,
         Instant createdAt,
+        long cheersCount,
+        boolean cheeredByMe,
         FeedItemDetailsResponse details
 ) {}

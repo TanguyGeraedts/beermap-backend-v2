@@ -8,7 +8,9 @@ public final class FeedItemMapper {
 
     public static FeedItemResponse toResponse(
             FeedItem feedItem,
-            FeedItemDetailsResponse details
+            FeedItemDetailsResponse details,
+            long cheersCount,
+            boolean cheeredByMe
     ) {
         return new FeedItemResponse(
                 feedItem.getId(),
@@ -19,6 +21,8 @@ public final class FeedItemMapper {
                 feedItem.getVisibility(),
                 feedItem.getMetadataJson(),
                 feedItem.getCreatedAt(),
+                cheersCount,
+                cheeredByMe,
                 details
         );
     }
