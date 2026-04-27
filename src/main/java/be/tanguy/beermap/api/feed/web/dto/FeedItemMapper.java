@@ -1,13 +1,15 @@
 package be.tanguy.beermap.api.feed.web.dto;
 
 import be.tanguy.beermap.api.feed.domain.FeedItem;
-import be.tanguy.beermap.api.feed.web.dto.FeedItemResponse;
 
 public final class FeedItemMapper {
 
     private FeedItemMapper() {}
 
-    public static FeedItemResponse toResponse(FeedItem feedItem) {
+    public static FeedItemResponse toResponse(
+            FeedItem feedItem,
+            FeedItemDetailsResponse details
+    ) {
         return new FeedItemResponse(
                 feedItem.getId(),
                 feedItem.getUserId(),
@@ -16,7 +18,8 @@ public final class FeedItemMapper {
                 feedItem.getTargetId(),
                 feedItem.getVisibility(),
                 feedItem.getMetadataJson(),
-                feedItem.getCreatedAt()
+                feedItem.getCreatedAt(),
+                details
         );
     }
 }

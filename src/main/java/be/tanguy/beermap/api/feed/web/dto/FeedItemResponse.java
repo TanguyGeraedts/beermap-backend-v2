@@ -15,5 +15,6 @@ public record FeedItemResponse(
         UUID targetId,
         FeedVisibility visibility,
         String metadataJson,
-        Instant createdAt
+        Instant createdAt,
+        FeedItemDetailsResponse details
 ) {}

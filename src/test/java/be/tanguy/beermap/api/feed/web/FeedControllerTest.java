@@ -85,7 +85,8 @@ class FeedControllerTest {
                 logId,
                 FeedVisibility.PUBLIC,
                 null,
-                createdAt
+                createdAt,
+                null
         );
 
         FeedPageResponse response = new FeedPageResponse(
@@ -129,7 +130,8 @@ class FeedControllerTest {
                 UUID.randomUUID(),
                 FeedVisibility.PUBLIC,
                 null,
-                createdAt
+                createdAt,
+                null
         );
 
         FeedPageResponse response = new FeedPageResponse(
