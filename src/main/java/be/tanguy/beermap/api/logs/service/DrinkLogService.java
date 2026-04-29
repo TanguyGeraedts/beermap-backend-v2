@@ -1,8 +1,9 @@
 package be.tanguy.beermap.api.logs.service;
 
+import be.tanguy.beermap.api.common.security.UserIdentity;
 import be.tanguy.beermap.api.logs.domain.DrinkLog;
-import be.tanguy.beermap.api.logs.service.command.LogDrinkCommand;
-import be.tanguy.beermap.api.logs.service.command.UpdateDrinkLogCommand;
+import be.tanguy.beermap.api.logs.web.dto.LogDrinkRequest;
+import be.tanguy.beermap.api.logs.web.dto.UpdateDrinkLogRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -10,31 +11,15 @@ import java.util.UUID;
 
 public interface DrinkLogService {
 
-    /**
-     * Logs consumption of a drink — either from the catalog or a custom entry.
-     * The command must contain exactly one of {@code catalogItemId} or {@code customDrinkName}.
-     */
-    DrinkLog logDrink(LogDrinkCommand command);
+    DrinkLog logDrink(UserIdentity identity, LogDrinkRequest request);
 
-    /**
-     * Retrieves a paginated timeline of drink logs for a user,
-     * ordered by consumption time descending.
-     */
-    Page<DrinkLog> getTimeline(UUID userId, Pageable pageable);
+    DrinkLog logFromDraft(UserIdentity identity, UUID draftId, LogDrinkRequest request);
 
-    /**
-     * Retrieves a single drink log entry owned by the given user.
-     */
-    DrinkLog getLog(UUID userId, UUID logId);
+    Page<DrinkLog> getTimeline(UserIdentity identity, Pageable pageable);
 
-    /**
-     * Partially updates an existing drink log entry.
-     * Only non-null fields in the command are applied.
-     */
-    DrinkLog updateLog(UpdateDrinkLogCommand command);
+    DrinkLog getLog(UserIdentity identity, UUID logId);
 
-    /**
-     * Deletes a drink log entry owned by the given user.
-     */
-    void deleteLog(UUID userId, UUID logId);
+    DrinkLog updateLog(UserIdentity identity, UUID logId, UpdateDrinkLogRequest request);
+
+    void deleteLog(UserIdentity identity, UUID logId);
 }

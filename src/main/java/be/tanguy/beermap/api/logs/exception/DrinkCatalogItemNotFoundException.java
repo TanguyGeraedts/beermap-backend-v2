@@ -1,12 +1,13 @@
 package be.tanguy.beermap.api.logs.exception;
 
-public class DrinkCatalogItemNotFoundException extends RuntimeException {
+import java.util.UUID;
 
-    public DrinkCatalogItemNotFoundException() {
-        super("Drink catalog item not found");
+public class DrinkCatalogItemNotFoundException extends DrinkLogDomainException {
+    public DrinkCatalogItemNotFoundException(UUID itemId) {
+        super("Catalog item not found with ID: " + itemId);
     }
 
-    public DrinkCatalogItemNotFoundException(String message) {
-        super(message);
+    public DrinkCatalogItemNotFoundException(String name) {
+        super("Catalog item not found with name: " + name);
     }
 }

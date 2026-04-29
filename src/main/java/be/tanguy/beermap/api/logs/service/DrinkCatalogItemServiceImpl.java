@@ -32,9 +32,7 @@ public class DrinkCatalogItemServiceImpl implements DrinkCatalogItemService {
         String normalizedName = normalizeRequired(name);
 
         if (drinkCatalogItemRepository.existsByNormalizedName(normalizedName)) {
-            throw new DrinkCatalogItemAlreadyExistsException(
-                    "Drink catalog item already exists with name: " + name
-            );
+            throw new DrinkCatalogItemAlreadyExistsException(name);
         }
 
         DrinkCatalogItem item = DrinkCatalogItem.create(name, category, subType, abvPercent);
@@ -56,9 +54,7 @@ public class DrinkCatalogItemServiceImpl implements DrinkCatalogItemService {
         drinkCatalogItemRepository.findByNormalizedName(normalizedName)
                 .filter(existing -> !existing.getId().equals(id))
                 .ifPresent(existing -> {
-                    throw new DrinkCatalogItemAlreadyExistsException(
-                            "Drink catalog item already exists with name: " + name
-                    );
+                    throw new DrinkCatalogItemAlreadyExistsException(name);
                 });
 
         item.update(name, category, subType, abvPercent);
@@ -69,9 +65,7 @@ public class DrinkCatalogItemServiceImpl implements DrinkCatalogItemService {
     @Transactional(readOnly = true)
     public DrinkCatalogItem getById(UUID id) {
         return drinkCatalogItemRepository.findById(id)
-                .orElseThrow(() -> new DrinkCatalogItemNotFoundException(
-                        "Drink catalog item not found: " + id
-                ));
+                .orElseThrow(() -> new DrinkCatalogItemNotFoundException(id));
     }
 
     @Override
@@ -80,9 +74,7 @@ public class DrinkCatalogItemServiceImpl implements DrinkCatalogItemService {
         String normalizedName = normalizeRequired(name);
 
         return drinkCatalogItemRepository.findByNormalizedName(normalizedName)
-                .orElseThrow(() -> new DrinkCatalogItemNotFoundException(
-                        "Drink catalog item not found: " + name
-                ));
+                .orElseThrow(() -> new DrinkCatalogItemNotFoundException(name));
     }
 
     @Override

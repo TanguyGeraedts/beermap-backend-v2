@@ -3,6 +3,7 @@ package be.tanguy.beermap.api.logs.domain;
 import be.tanguy.beermap.api.common.persistence.AbstractBaseObject;
 import be.tanguy.beermap.api.logs.exception.InvalidCapturedAtException;
 import be.tanguy.beermap.api.logs.exception.InvalidDraftStateException;
+import be.tanguy.beermap.api.logs.exception.ResourceOwnershipException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -53,7 +54,7 @@ public class DraftLog extends AbstractBaseObject {
         return draft;
     }
 
-    public void markConsumed() {
+    public void consume() {
         if (this.status != DraftStatus.ACTIVE) {
             throw new InvalidDraftStateException(this.status, DraftStatus.ACTIVE);
         }
@@ -84,6 +85,12 @@ public class DraftLog extends AbstractBaseObject {
 
         if (capturedAt != null && capturedAt.isAfter(now)) {
             throw new InvalidCapturedAtException(capturedAt);
+        }
+    }
+
+    public void verifyOwnership(UUID userId) {
+        if (!this.userId.equals(userId)) {
+            throw new ResourceOwnershipException("DrinkLog", this.id);
         }
     }
 }

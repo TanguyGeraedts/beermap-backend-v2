@@ -1,5 +1,6 @@
 package be.tanguy.beermap.api.logs.domain;
 
+import be.tanguy.beermap.api.logs.exception.InvalidDrinkIdentityException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EnumType;
@@ -37,10 +38,6 @@ public class DrinkIdentity {
     @Column(name = "abv_percent", precision = 5, scale = 2)
     private BigDecimal abvPercent;
 
-    // -------------------------------------------------------------------------
-    // Factory methods
-    // -------------------------------------------------------------------------
-
     public static DrinkIdentity forCatalog(
             UUID catalogItemId,
             String catalogItemName,
@@ -48,17 +45,15 @@ public class DrinkIdentity {
             String subType,
             BigDecimal abvPercent
     ) {
-        if (catalogItemId == null)                          throw new IllegalArgumentException("catalogItemId is required");
-        if (catalogItemName == null || catalogItemName.isBlank()) throw new IllegalArgumentException("catalogItemName is required");
-        if (category == null)                               throw new IllegalArgumentException("category is required");
+        if (catalogItemId == null) throw new InvalidDrinkIdentityException("catalogItemId is required");
+        if (catalogItemName == null || catalogItemName.isBlank()) throw new InvalidDrinkIdentityException("catalogItemName is required");
 
         DrinkIdentity id = new DrinkIdentity();
-        id.catalogItemId   = catalogItemId;
+        id.catalogItemId = catalogItemId;
         id.catalogItemName = catalogItemName.trim();
-        id.category        = category;
-        id.subType         = normalizeNullable(subType);
-        id.abvPercent      = abvPercent;
-        id.customDrinkName = null;
+        id.category = category;
+        id.subType = normalizeNullable(subType);
+        id.abvPercent = abvPercent;
         return id;
     }
 
@@ -68,37 +63,22 @@ public class DrinkIdentity {
             String subType,
             BigDecimal abvPercent
     ) {
-        if (customDrinkName == null || customDrinkName.isBlank()) throw new IllegalArgumentException("customDrinkName is required");
-        if (category == null)                                      throw new IllegalArgumentException("category is required");
+        if (customDrinkName == null || customDrinkName.isBlank()) throw new InvalidDrinkIdentityException("customDrinkName is required");
+        if (category == null) throw new InvalidDrinkIdentityException("category is required");
 
         DrinkIdentity id = new DrinkIdentity();
         id.customDrinkName = customDrinkName.trim();
-        id.category        = category;
-        id.subType         = normalizeNullable(subType);
-        id.abvPercent      = abvPercent;
-        id.catalogItemId   = null;
-        id.catalogItemName = null;
+        id.category = category;
+        id.subType = normalizeNullable(subType);
+        id.abvPercent = abvPercent;
         return id;
     }
 
-    // -------------------------------------------------------------------------
-    // Mutation
-    // -------------------------------------------------------------------------
-
-    /**
-     * Partially updates mutable identity fields. Only non-null values are applied.
-     * {@code category}, {@code subType}, and {@code abvPercent} are patchable;
-     * catalog/custom name fields are immutable after creation.
-     */
     public void update(DrinkCategory category, String subType, BigDecimal abvPercent) {
-        if (category != null)    this.category  = category;
-        if (subType != null)     this.subType   = normalizeNullable(subType);
-        if (abvPercent != null)  this.abvPercent = abvPercent;
+        if (category != null) this.category = category;
+        if (subType != null) this.subType = normalizeNullable(subType);
+        if (abvPercent != null) this.abvPercent = abvPercent;
     }
-
-    // -------------------------------------------------------------------------
-    // Query helpers
-    // -------------------------------------------------------------------------
 
     public String getDisplayName() {
         return catalogItemId != null ? catalogItemName : customDrinkName;
@@ -107,10 +87,6 @@ public class DrinkIdentity {
     public boolean isCatalog() {
         return catalogItemId != null;
     }
-
-    // -------------------------------------------------------------------------
-    // Private helpers
-    // -------------------------------------------------------------------------
 
     private static String normalizeNullable(String value) {
         if (value == null) return null;

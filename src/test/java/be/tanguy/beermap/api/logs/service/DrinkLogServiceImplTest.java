@@ -1,11 +1,16 @@
 package be.tanguy.beermap.api.logs.service;
 
+import be.tanguy.beermap.api.common.security.UserIdentity;
 import be.tanguy.beermap.api.logs.domain.DrinkCatalogItem;
 import be.tanguy.beermap.api.logs.domain.DrinkCategory;
 import be.tanguy.beermap.api.logs.domain.DrinkLog;
+import be.tanguy.beermap.api.logs.event.DrinkLogCreatedEvent; // Added import
+import be.tanguy.beermap.api.logs.repository.DraftLogRepository;
 import be.tanguy.beermap.api.logs.repository.DrinkCatalogItemRepository;
 import be.tanguy.beermap.api.logs.repository.DrinkLogRepository;
-import be.tanguy.beermap.api.logs.service.command.LogDrinkCommand;
+import be.tanguy.beermap.api.logs.web.dto.LogDrinkRequest;
+import be.tanguy.beermap.api.users.service.UserProfileService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,6 +19,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -26,10 +32,22 @@ class DrinkLogServiceImplTest {
 
     @Mock private DrinkLogRepository drinkLogRepository;
     @Mock private DrinkCatalogItemRepository drinkCatalogItemRepository;
+    @Mock private DraftLogRepository draftLogRepository;
+    @Mock private UserProfileService userProfileService;
     @Mock private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private DrinkLogServiceImpl service;
+
+    private UserIdentity userIdentity;
+    private UUID userId;
+
+    @BeforeEach
+    void setUp() {
+        userIdentity = mock(UserIdentity.class);
+        userId = UUID.randomUUID();
+        lenient().when(userProfileService.getCurrentUserId(userIdentity)).thenReturn(userId);
+    }
 
     @Nested
     class LogDrink {
@@ -37,7 +55,6 @@ class DrinkLogServiceImplTest {
         @Test
         void logs_catalog_drink_successfully() {
             // Arrange
-            UUID userId = UUID.randomUUID();
             UUID catalogId = UUID.randomUUID();
 
             DrinkCatalogItem item = mock(DrinkCatalogItem.class);
@@ -46,46 +63,44 @@ class DrinkLogServiceImplTest {
             when(item.getCategory()).thenReturn(DrinkCategory.BEER);
 
             when(drinkCatalogItemRepository.findById(catalogId)).thenReturn(Optional.of(item));
-
-            // FIX: Instead of returning a mock(DrinkLog.class), we return the actual
-            // object that was passed into the save method. This ensures getIdentity() is NOT null.
             when(drinkLogRepository.save(any(DrinkLog.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-            LogDrinkCommand cmd = LogDrinkCommand.builder()
-                    .userId(userId)
-                    .catalogItemId(catalogId)
-                    .quantity(1)
-                    .build();
+            LogDrinkRequest request = new LogDrinkRequest(
+                    catalogId, null, null, null, null, 1, 250, null, null, null, null, null, null
+            );
 
             // Act
-            DrinkLog result = service.logDrink(cmd);
+            DrinkLog result = service.logDrink(userIdentity, request);
 
             // Assert
             assertThat(result).isNotNull();
-            assertThat(result.getIdentity().getCategory()).isEqualTo(DrinkCategory.BEER);
+            assertThat(result.getUserId()).isEqualTo(userId);
             verify(drinkLogRepository).save(any(DrinkLog.class));
+
+            verify(eventPublisher).publishEvent(any(DrinkLogCreatedEvent.class));
         }
 
         @Test
         void logs_custom_drink_successfully() {
             // Arrange
-            // FIX: Use thenAnswer to return the real object being saved
             when(drinkLogRepository.save(any(DrinkLog.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-            LogDrinkCommand cmd = LogDrinkCommand.builder()
-                    .userId(UUID.randomUUID())
-                    .customDrinkName("Homebrew IPA")
-                    .category(DrinkCategory.BEER)
-                    .quantity(1)
-                    .build();
+            LogDrinkRequest request = new LogDrinkRequest(
+                    null, "Homebrew IPA", DrinkCategory.BEER, "West Coast", null,
+                    1, 330, new BigDecimal("7.5"), 5, "Very hoppy", "http://image.url", 51.2194, 4.4025
+            );
 
             // Act
-            DrinkLog result = service.logDrink(cmd);
+            DrinkLog result = service.logDrink(userIdentity, request);
 
             // Assert
             assertThat(result).isNotNull();
-            assertThat(result.getIdentity().getCategory()).isEqualTo(DrinkCategory.BEER);
+            assertThat(result.getUserId()).isEqualTo(userId);
+            assertThat(result.getIdentity().getCustomDrinkName()).isEqualTo("Homebrew IPA");
             verify(drinkLogRepository).save(any(DrinkLog.class));
+
+            // Consistent fix for all creation tests
+            verify(eventPublisher).publishEvent(any(DrinkLogCreatedEvent.class));
         }
     }
 }

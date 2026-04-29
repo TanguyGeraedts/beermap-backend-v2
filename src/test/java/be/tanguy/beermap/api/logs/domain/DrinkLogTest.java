@@ -1,6 +1,7 @@
 package be.tanguy.beermap.api.logs.domain;
 
 import be.tanguy.beermap.api.common.domain.Location;
+import be.tanguy.beermap.api.logs.exception.InvalidConsumptionException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -45,7 +46,7 @@ class DrinkLogTest {
         @Test
         void throws_when_userId_is_null() {
             assertThatThrownBy(() -> DrinkLog.create(null, catalogIdentity, consumption, null))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(InvalidConsumptionException.class)
                     .hasMessageContaining("userId is required");
         }
     }
@@ -61,7 +62,7 @@ class DrinkLogTest {
 
             assertThat(log.getConsumption().getRating()).isEqualTo(9);
             assertThat(log.getConsumption().getDescription()).isEqualTo(newDesc);
-            assertThat(log.getLocation().getLatitude()).isEqualTo(50.0);
+            assertThat(log.getLocation().latitude()).isEqualTo(50.0);
         }
     }
 }

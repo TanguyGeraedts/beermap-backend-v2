@@ -33,8 +33,8 @@ public record DrinkLogResponse(
                 log.getConsumption().getRating(),
                 log.getConsumption().getDescription(),
                 log.getConsumption().getPhotoUrl(),
-                log.getLocation() != null ? log.getLocation().getLatitude() : null,
-                log.getLocation() != null ? log.getLocation().getLongitude() : null
+                log.getLocation() != null ? log.getLocation().latitude() : null,
+                log.getLocation() != null ? log.getLocation().longitude() : null
         );
     }
 }

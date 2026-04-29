@@ -23,65 +23,60 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class DrinkLogController {
 
+    ///Services
     private final DrinkLogService drinkLogService;
-    private final UserProfileService userProfileService;
 
     @PostMapping(ApiPaths.DrinkLog.ME)
     @ResponseStatus(HttpStatus.CREATED)
     public DrinkLogResponse logDrink(
-            @AuthenticationPrincipal UserIdentity userIdentity,
+            @AuthenticationPrincipal UserIdentity identity,
             @Valid @RequestBody LogDrinkRequest request
     ) {
-        UUID userId = currentUserId(userIdentity);
-        return DrinkLogResponse.from(
-                drinkLogService.logDrink(request.toCommand(userId))
-        );
+        return DrinkLogResponse.from(drinkLogService.logDrink(identity, request));
     }
 
     @GetMapping(ApiPaths.DrinkLog.ME)
     public Page<DrinkLogResponse> getTimeline(
-            @AuthenticationPrincipal UserIdentity userIdentity,
+            @AuthenticationPrincipal UserIdentity identity,
             @PageableDefault(size = 20) Pageable pageable
     ) {
-        UUID userId = currentUserId(userIdentity);
-        return drinkLogService.getTimeline(userId, pageable)
+        return drinkLogService.getTimeline(identity, pageable)
                 .map(DrinkLogResponse::from);
     }
 
     @GetMapping(ApiPaths.DrinkLog.ME + ApiPaths.DrinkLog.ID)
     public DrinkLogResponse getLog(
-            @AuthenticationPrincipal UserIdentity userIdentity,
+            @AuthenticationPrincipal UserIdentity identity,
             @PathVariable UUID logId
     ) {
-        UUID userId = currentUserId(userIdentity);
-        return DrinkLogResponse.from(
-                drinkLogService.getLog(userId, logId)
-        );
+        return DrinkLogResponse.from(drinkLogService.getLog(identity, logId));
     }
 
     @PatchMapping(ApiPaths.DrinkLog.ME + ApiPaths.DrinkLog.ID)
     public DrinkLogResponse updateLog(
-            @AuthenticationPrincipal UserIdentity userIdentity,
+            @AuthenticationPrincipal UserIdentity identity,
             @PathVariable UUID logId,
             @Valid @RequestBody UpdateDrinkLogRequest request
     ) {
-        UUID userId = currentUserId(userIdentity);
-        return DrinkLogResponse.from(
-                drinkLogService.updateLog(request.toCommand(userId, logId))
-        );
+        return DrinkLogResponse.from(drinkLogService.updateLog(identity, logId, request));
     }
 
     @DeleteMapping(ApiPaths.DrinkLog.ME + ApiPaths.DrinkLog.ID)
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteLog(
-            @AuthenticationPrincipal UserIdentity userIdentity,
+            @AuthenticationPrincipal UserIdentity identity,
             @PathVariable UUID logId
     ) {
-        UUID userId = currentUserId(userIdentity);
-        drinkLogService.deleteLog(userId, logId);
+        drinkLogService.deleteLog(identity, logId);
     }
 
-    private UUID currentUserId(UserIdentity userIdentity) {
-        return userProfileService.getCurrentUser(userIdentity).getId();
+    @PostMapping(ApiPaths.DrinkLog.ME + "/from-draft/{draftId}")
+    @ResponseStatus(HttpStatus.CREATED)
+    public DrinkLogResponse logFromDraft(
+            @AuthenticationPrincipal UserIdentity identity,
+            @PathVariable UUID draftId,
+            @Valid @RequestBody LogDrinkRequest request
+    ) {
+        return DrinkLogResponse.from(drinkLogService.logFromDraft(identity, draftId, request));
     }
 }
