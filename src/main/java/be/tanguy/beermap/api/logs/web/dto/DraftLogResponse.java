@@ -5,6 +5,7 @@ import be.tanguy.beermap.api.logs.domain.DraftStatus;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 public record DraftLogResponse(
@@ -26,5 +27,11 @@ public record DraftLogResponse(
                 draftLog.getCreatedAt(),
                 draftLog.getUpdatedAt()
         );
+    }
+
+    public static List<DraftLogResponse> fromEntities(List<DraftLog> draftLogs) {
+        return draftLogs.stream()
+                .map(DraftLogResponse::fromEntity)
+                .toList();
     }
 }

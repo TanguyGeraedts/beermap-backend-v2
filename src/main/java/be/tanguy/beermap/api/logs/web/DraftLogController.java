@@ -11,10 +11,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping(ApiPaths.DraftLog.BASE)
@@ -23,6 +22,15 @@ public class DraftLogController {
 
     /// Services
     private final DraftLogService draftLogService;
+
+    @GetMapping(ApiPaths.DraftLog.ME)
+    public ResponseEntity<List<DraftLogResponse>> getActiveDrafts(
+            @AuthenticationPrincipal UserIdentity userIdentity
+    ) {
+        List<DraftLogResponse> response = DraftLogResponse.fromEntities(draftLogService.getActiveDrafts(userIdentity));
+
+        return ResponseEntity.ok(response);
+    }
 
     @PostMapping(ApiPaths.DraftLog.ME)
     public ResponseEntity<DraftLogResponse> createDraftLog(
