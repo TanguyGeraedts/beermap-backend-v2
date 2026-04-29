@@ -81,6 +81,13 @@ public final class ApiPaths {
 
     }
 
+    public static final class DraftLog{
+        public static final String BASE = V1 + "/draft-logs";
+
+        public static final String ME = "/me";
+        public static final String ID = "/{draftLogId}";
+    }
+
     public static final class Stats {
         public static final String BASE = V1 + "/stats";
 

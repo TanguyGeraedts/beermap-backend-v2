@@ -19,13 +19,11 @@ import java.util.UUID;
 public class StatsController {
 
     private final StatsService statsService;
-    private final UserProfileService userProfileService;
 
     @GetMapping(ApiPaths.Stats.ME)
     public StatsOverviewResponse getMyStats(
             @AuthenticationPrincipal UserIdentity userIdentity
     ) {
-        UUID userId = userProfileService.getCurrentUser(userIdentity).getId();
-        return statsService.getOverview(userId);
+        return statsService.getOverview(userIdentity);
     }
 }

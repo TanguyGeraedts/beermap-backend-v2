@@ -43,12 +43,14 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class FeedItemServiceImpl implements FeedItemService {
 
+    /// Auth
+    private final UserProfileService userProfileService;
+
     /// Repositories
     private final FeedItemRepository feedItemRepository;
     private final FeedItemCheersRepository feedItemCheersRepository;
     private final UserProfileRepository userProfileRepository;
     private final DrinkLogRepository drinkLogRepository;
-    private final UserProfileService userProfileService;
 
     @Override
     public void createDrinkFeedItem(DrinkLogCreatedEvent drinkLogCreatedEvent) {
@@ -72,7 +74,8 @@ public class FeedItemServiceImpl implements FeedItemService {
     @Override
     @Transactional(readOnly = true)
     public FeedPageResponse getFeed(UserIdentity userIdentity, Instant cursor, int limit) {
-        UUID currentUserId = currentUserId(userIdentity);
+        UUID currentUserId = userProfileService.getCurrentUserId(userIdentity);
+
         int safeLimit = Math.min(Math.max(limit, 1), 50);
         Pageable pageable = PageRequest.of(0, safeLimit + 1);
         List<FeedVisibility> allowedVisibilities = List.of(FeedVisibility.PUBLIC);
@@ -111,7 +114,8 @@ public class FeedItemServiceImpl implements FeedItemService {
     @Override
     @Transactional
     public FeedCheersResponse cheerFeedItem(UserIdentity userIdentity, UUID feedItemId) {
-        UUID currentUserId = currentUserId(userIdentity);
+        UUID currentUserId = userProfileService.getCurrentUserId(userIdentity);
+
         FeedItem feedItem = getFeedItemOrThrow(feedItemId);
         validateFeedItemCanBeCheered(feedItem);
 
@@ -130,7 +134,8 @@ public class FeedItemServiceImpl implements FeedItemService {
     @Override
     @Transactional
     public FeedCheersResponse uncheerFeedItem(UserIdentity userIdentity, UUID feedItemId) {
-        UUID currentUserId = currentUserId(userIdentity);
+        UUID currentUserId = userProfileService.getCurrentUserId(userIdentity);
+
         FeedItem feedItem = getFeedItemOrThrow(feedItemId);
         validateFeedItemCanBeCheered(feedItem);
 
@@ -224,9 +229,5 @@ public class FeedItemServiceImpl implements FeedItemService {
         if (!feedItem.isPublic()) {
             throw new IllegalArgumentException("Only public feed items can be cheered");
         }
-    }
-
-    private UUID currentUserId(UserIdentity userIdentity) {
-        return userProfileService.getCurrentUser(userIdentity).getId();
     }
 }

@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static be.tanguy.beermap.api.users.domain.UserProfileInfo.DISCRIMINATOR_LENGTH;
@@ -67,6 +68,12 @@ public class UserProfileServiceImpl implements UserProfileService {
         return authIdentityRepository.findByIssuerAndSubject(userIdentity.issuer(), userIdentity.subject())
                 .map(AuthIdentity::getUserProfile)
                 .orElseThrow(ProfileNotFoundException::new);
+    }
+
+    @Override
+    @Transactional
+    public UUID getCurrentUserId(UserIdentity userIdentity) {
+        return this.getCurrentUser(userIdentity).getId();
     }
 
     @Override

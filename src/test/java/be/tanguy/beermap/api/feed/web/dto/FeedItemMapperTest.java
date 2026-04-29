@@ -41,7 +41,7 @@ class FeedItemMapperTest {
                 )
         );
 
-        FeedItemResponse response = FeedItemMapper.toResponse(feedItem, details);
+        FeedItemResponse response = FeedItemMapper.toResponse(feedItem, details, 3L, true);
 
         assertThat(response.userId()).isEqualTo(userId);
         assertThat(response.targetId()).isEqualTo(targetId);
@@ -50,5 +50,7 @@ class FeedItemMapperTest {
         assertThat(response.visibility()).isEqualTo(FeedVisibility.PUBLIC);
         assertThat(response.metadataJson()).isEqualTo("{\"example\":true}");
         assertThat(response.details()).isEqualTo(details);
+        assertThat(response.cheersCount()).isEqualTo(3L);
+        assertThat(response.cheeredByMe()).isTrue();
     }
 }

@@ -19,7 +19,6 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -29,6 +28,9 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 @WebMvcTest(
@@ -74,7 +76,6 @@ class FeedControllerTest {
         UUID feedItemId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
         UUID logId = UUID.randomUUID();
-
         Instant createdAt = Instant.parse("2026-04-25T10:48:28.120Z");
 
         FeedItemResponse item = new FeedItemResponse(
@@ -84,9 +85,11 @@ class FeedControllerTest {
                 FeedTargetType.DRINK_LOG,
                 logId,
                 FeedVisibility.PUBLIC,
-                null,
+                null,       // metadataJson
                 createdAt,
-                null
+                5L,         // cheersCount
+                true,       // cheeredByMe
+                null        // details
         );
 
         FeedPageResponse response = new FeedPageResponse(
@@ -95,25 +98,25 @@ class FeedControllerTest {
                 true
         );
 
-        when(feedItemService.getFeed(null, 20)).thenReturn(response);
+        lenient().when(feedItemService.getFeed(any(), any(), anyInt())).thenReturn(response);
 
         mockMvcTester.get().uri(BASE_URL)
                 .assertThat()
                 .hasStatusOk()
                 .bodyJson()
                 .isLenientlyEqualTo("""
+                    {
+                      "items": [
                         {
-                          "items": [
-                            {
-                              "type": "DRINK_LOG_CREATED",
-                              "targetType": "DRINK_LOG",
-                              "visibility": "PUBLIC"
-                            }
-                          ],
-                          "nextCursor": "2026-04-25T10:48:28.120Z",
-                          "hasMore": true
+                          "type": "DRINK_LOG_CREATED",
+                          "cheersCount": 5,
+                          "cheeredByMe": true
                         }
-                        """);
+                      ],
+                      "nextCursor": "2026-04-25T10:48:28.120Z",
+                      "hasMore": true
+                    }
+                    """);
     }
 
     @Test
@@ -131,7 +134,9 @@ class FeedControllerTest {
                 FeedVisibility.PUBLIC,
                 null,
                 createdAt,
-                null
+                0L,     // cheersCount
+                false,  // cheeredByMe
+                null    // details
         );
 
         FeedPageResponse response = new FeedPageResponse(
@@ -140,7 +145,7 @@ class FeedControllerTest {
                 false
         );
 
-        when(feedItemService.getFeed(cursor, 10)).thenReturn(response);
+        lenient().when(feedItemService.getFeed(any(), any(), anyInt())).thenReturn(response);
 
         mockMvcTester.get()
                 .uri(BASE_URL + "?cursor={cursor}&limit={limit}", cursor, 10)
@@ -153,7 +158,9 @@ class FeedControllerTest {
                             {
                               "type": "DRINK_LOG_CREATED",
                               "targetType": "DRINK_LOG",
-                              "visibility": "PUBLIC"
+                              "visibility": "PUBLIC",
+                              "cheersCount": 0,
+                              "cheeredByMe": false
                             }
                           ],
                           "nextCursor": "2026-04-25T10:30:00Z",
@@ -171,7 +178,7 @@ class FeedControllerTest {
                 false
         );
 
-        when(feedItemService.getFeed(null, 20)).thenReturn(response);
+        lenient().when(feedItemService.getFeed(any(), any(), anyInt())).thenReturn(response);
 
         mockMvcTester.get().uri(BASE_URL)
                 .assertThat()

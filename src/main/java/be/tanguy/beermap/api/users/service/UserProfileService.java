@@ -3,6 +3,8 @@ package be.tanguy.beermap.api.users.service;
 import be.tanguy.beermap.api.common.security.UserIdentity;
 import be.tanguy.beermap.api.users.domain.UserProfile;
 
+import java.util.UUID;
+
 public interface UserProfileService {
 
     UserProfile createUser(
@@ -13,6 +15,8 @@ public interface UserProfileService {
     );
 
     UserProfile getCurrentUser(UserIdentity userIdentity);
+
+    UUID getCurrentUserId(UserIdentity userIdentity);
 
     UserProfile updateProfile(
             UserIdentity userIdentity,
