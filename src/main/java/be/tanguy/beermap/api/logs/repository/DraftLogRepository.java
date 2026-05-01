@@ -12,4 +12,6 @@ import java.util.UUID;
 public interface DraftLogRepository extends JpaRepository<DraftLog, UUID> {
 
     List<DraftLog> findAllByUserIdAndStatusOrderByCapturedAtDesc(UUID userId, DraftStatus status);
+
+    long countByUserIdAndStatus(UUID userId, DraftStatus status);
 }

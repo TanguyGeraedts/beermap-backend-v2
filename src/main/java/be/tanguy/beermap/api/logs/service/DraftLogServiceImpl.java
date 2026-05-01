@@ -3,10 +3,15 @@ package be.tanguy.beermap.api.logs.service;
 import be.tanguy.beermap.api.common.security.UserIdentity;
 import be.tanguy.beermap.api.logs.domain.DraftLog;
 import be.tanguy.beermap.api.logs.domain.DraftStatus;
+import be.tanguy.beermap.api.logs.exception.DraftLimitExceededException;
 import be.tanguy.beermap.api.logs.repository.DraftLogRepository;
 import be.tanguy.beermap.api.logs.web.dto.CreateDraftLogRequest;
+import be.tanguy.beermap.api.users.domain.AccountType;
+import be.tanguy.beermap.api.users.domain.PlanLimits;
+import be.tanguy.beermap.api.users.domain.UserProfile;
 import be.tanguy.beermap.api.users.service.UserProfileService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,10 +32,13 @@ public class DraftLogServiceImpl implements DraftLogService {
     @Override
     @Transactional
     public DraftLog createDraftLog(UserIdentity userIdentity, CreateDraftLogRequest request) {
-        UUID currentUserId = userProfileService.getCurrentUserId(userIdentity);
+        UserProfile currentUser = userProfileService.getCurrentUser(userIdentity);
+
+        long activeCount = draftLogRepository.countByUserIdAndStatus(currentUser.getId(), DraftStatus.ACTIVE);
+        PlanLimits.verifyActiveDraftLimit(currentUser.getAccountType(), activeCount);
 
         DraftLog draftLog = DraftLog.createDraft(
-                currentUserId,
+                currentUser.getId(),
                 request.photoUrl(),
                 request.capturedAt()
         );
