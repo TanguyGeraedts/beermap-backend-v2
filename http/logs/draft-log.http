@@ -1,0 +1,87 @@
+### =====================================================
+### Variables
+### =====================================================
+
+@keycloak_base=http://localhost:8081
+@realm=beermap-v2
+@client_id=beermap-backend-v2
+
+@backend_base=http://localhost:8080
+
+@username=tanguy@test.com
+@password=test
+
+@catalog_id=a66d1907-7034-46f0-9794-da0d286ab09e
+
+### =====================================================
+### Login to Keycloak (Password Grant - DEV ONLY)
+### =====================================================
+
+POST {{keycloak_base}}/realms/{{realm}}/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+client_id={{client_id}}&
+grant_type=password&
+username={{username}}&
+password={{password}}
+
+> {%
+    client.global.set("access_token", response.body.access_token);
+%}
+
+
+### =====================================================
+### POST /api/v1/draft-logs/me
+### - Create a new draft log
+### =====================================================
+
+POST {{backend_base}}/api/v1/draft-logs/me
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "photoUrl": "https://example.com/images/beer-draft.jpg",
+  "capturedAt": "2026-05-01T19:30:00"
+}
+
+> {%
+    // Saves the newly created draft ID to use in the finalization request below
+    client.global.set("draft_id", response.body.id);
+%}
+
+
+### =====================================================
+### GET /api/v1/draft-logs/me
+### - Get current user's active drafts
+### =====================================================
+
+GET {{backend_base}}/api/v1/draft-logs/me
+Authorization: Bearer {{access_token}}
+Accept: application/json
+
+
+### =====================================================
+### POST /api/v1/drink-logs/me/from-draft/{draftId}
+### - Finalize and log a drink from a draft
+### =====================================================
+
+POST {{backend_base}}/api/v1/drink-logs/me/from-draft/{{draft_id}}
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "catalogItemId": "{{catalog_id}}",
+  "quantity": 1,
+  "volumeMl": 330,
+  "rating": 8,
+  "description": "Finished my draft beer!",
+  "photoUrl": "https://example.com/images/beer-draft.jpg",
+  "latitude": 50.8503,
+  "longitude": 4.3517
+}
+
+> {%
+    client.global.set("created_log_id", response.body.id);
+%}
