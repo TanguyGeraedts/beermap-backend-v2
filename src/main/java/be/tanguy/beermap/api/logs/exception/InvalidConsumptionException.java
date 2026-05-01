@@ -1,5 +1,9 @@
 package be.tanguy.beermap.api.logs.exception;
 
-public class InvalidConsumptionException extends RuntimeException {
-    public InvalidConsumptionException(String message) { super(message); }
+import org.springframework.http.HttpStatus;
+
+public class InvalidConsumptionException extends DrinkLogDomainException {
+    public InvalidConsumptionException(String message) {
+        super(HttpStatus.BAD_REQUEST, "INVALID_CONSUMPTION", message);
+    }
 }

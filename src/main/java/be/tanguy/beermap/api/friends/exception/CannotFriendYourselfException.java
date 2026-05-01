@@ -1,7 +1,9 @@
 package be.tanguy.beermap.api.friends.exception;
 
-public class CannotFriendYourselfException extends FriendshipException {
+import org.springframework.http.HttpStatus;
+
+public class CannotFriendYourselfException extends FriendshipDomainException {
     public CannotFriendYourselfException() {
-        super("Users cannot friend themselves");
+        super(HttpStatus.BAD_REQUEST, "CANNOT_FRIEND_YOURSELF", "Users cannot friend themselves");
     }
 }

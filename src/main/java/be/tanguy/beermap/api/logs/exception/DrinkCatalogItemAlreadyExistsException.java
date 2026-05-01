@@ -1,8 +1,9 @@
 package be.tanguy.beermap.api.logs.exception;
 
-public class DrinkCatalogItemAlreadyExistsException extends RuntimeException {
+import org.springframework.http.HttpStatus;
 
+public class DrinkCatalogItemAlreadyExistsException extends DrinkLogDomainException {
     public DrinkCatalogItemAlreadyExistsException(String name) {
-        super("Drink catalog item already exists with " + name);
+        super(HttpStatus.CONFLICT, "DRINK_CATALOG_ITEM_ALREADY_EXISTS", "Drink catalog item already exists with " + name);
     }
 }

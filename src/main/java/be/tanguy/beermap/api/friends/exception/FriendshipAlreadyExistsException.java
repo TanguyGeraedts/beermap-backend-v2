@@ -1,7 +1,9 @@
 package be.tanguy.beermap.api.friends.exception;
 
-public class FriendshipAlreadyExistsException extends FriendshipException {
+import org.springframework.http.HttpStatus;
+
+public class FriendshipAlreadyExistsException extends FriendshipDomainException {
     public FriendshipAlreadyExistsException() {
-        super("Friendship already exists");
+        super(HttpStatus.CONFLICT, "FRIENDSHIP_ALREADY_EXISTS", "Friendship already exists");
     }
 }
