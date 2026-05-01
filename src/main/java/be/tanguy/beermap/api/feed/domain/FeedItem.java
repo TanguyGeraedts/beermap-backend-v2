@@ -1,6 +1,7 @@
 package be.tanguy.beermap.api.feed.domain;
 
 import be.tanguy.beermap.api.common.persistence.AbstractBaseObject;
+import be.tanguy.beermap.api.feed.exception.InvalidFeedItemException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -34,14 +35,6 @@ public class FeedItem extends AbstractBaseObject {
     @Column(name = "target_type", nullable = false)
     private FeedTargetType targetType;
 
-    /**
-     * ID of the thing this feed item points to.
-     * For example:
-     * - DRINK_LOG -> drink_logs.id
-     * - BADGE -> badges/user_badges.id
-     * - FRIENDSHIP -> friendships.id
-     * - SESSION -> sessions.id
-     */
     @Column(name = "target_id", nullable = false)
     private UUID targetId;
 
@@ -60,7 +53,11 @@ public class FeedItem extends AbstractBaseObject {
             FeedVisibility visibility,
             String metadataJson
     ) {
-        validate(userId, type, targetType, targetId, visibility);
+        if (userId == null) throw new InvalidFeedItemException("userId is required");
+        if (type == null) throw new InvalidFeedItemException("Feed item type is required");
+        if (targetType == null) throw new InvalidFeedItemException("Feed target type is required");
+        if (targetId == null) throw new InvalidFeedItemException("Feed target ID is required");
+        if (visibility == null) throw new InvalidFeedItemException("Feed visibility is required");
 
         this.userId = userId;
         this.type = type;
@@ -77,14 +74,7 @@ public class FeedItem extends AbstractBaseObject {
             UUID targetId,
             FeedVisibility visibility
     ) {
-        return new FeedItem(
-                userId,
-                type,
-                targetType,
-                targetId,
-                visibility,
-                null
-        );
+        return new FeedItem(userId, type, targetType, targetId, visibility, null);
     }
 
     public static FeedItem create(
@@ -95,28 +85,24 @@ public class FeedItem extends AbstractBaseObject {
             FeedVisibility visibility,
             String metadataJson
     ) {
-        return new FeedItem(
-                userId,
-                type,
-                targetType,
-                targetId,
-                visibility,
-                metadataJson
-        );
+        return new FeedItem(userId, type, targetType, targetId, visibility, metadataJson);
     }
 
     /// STATE TRANSITIONS
 
     public void changeVisibility(FeedVisibility visibility) {
-        if (visibility == null) {
-            throw new IllegalArgumentException("Feed visibility cannot be null");
-        }
-
+        if (visibility == null) throw new InvalidFeedItemException("Feed visibility cannot be null");
         this.visibility = visibility;
     }
 
     public void updateMetadataJson(String metadataJson) {
         this.metadataJson = metadataJson;
+    }
+
+    public void assertCanBeCheered() {
+        if (!isPublic()) {
+            throw new InvalidFeedItemException("Only public feed items can be cheered");
+        }
     }
 
     /// HELPERS
@@ -134,46 +120,12 @@ public class FeedItem extends AbstractBaseObject {
     }
 
     public boolean wasCreatedBy(UUID userId) {
-        if (userId == null) {
-            return false;
-        }
-
+        if (userId == null) return false;
         return this.userId.equals(userId);
     }
 
     public boolean pointsTo(FeedTargetType targetType, UUID targetId) {
-        if (targetType == null || targetId == null) {
-            return false;
-        }
-
+        if (targetType == null || targetId == null) return false;
         return this.targetType == targetType && this.targetId.equals(targetId);
-    }
-
-    private static void validate(
-            UUID userId,
-            FeedItemType type,
-            FeedTargetType targetType,
-            UUID targetId,
-            FeedVisibility visibility
-    ) {
-        if (userId == null) {
-            throw new IllegalArgumentException("User ID cannot be null");
-        }
-
-        if (type == null) {
-            throw new IllegalArgumentException("Feed item type cannot be null");
-        }
-
-        if (targetType == null) {
-            throw new IllegalArgumentException("Feed target type cannot be null");
-        }
-
-        if (targetId == null) {
-            throw new IllegalArgumentException("Feed target ID cannot be null");
-        }
-
-        if (visibility == null) {
-            throw new IllegalArgumentException("Feed visibility cannot be null");
-        }
     }
 }

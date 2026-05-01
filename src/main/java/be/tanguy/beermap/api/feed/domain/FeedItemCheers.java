@@ -1,11 +1,8 @@
 package be.tanguy.beermap.api.feed.domain;
 
 import be.tanguy.beermap.api.common.persistence.AbstractBaseObject;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Index;
-import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
+import be.tanguy.beermap.api.feed.exception.InvalidFeedItemException;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -38,13 +35,8 @@ public class FeedItemCheers extends AbstractBaseObject {
     private UUID userId;
 
     private FeedItemCheers(UUID feedItemId, UUID userId) {
-        if (feedItemId == null) {
-            throw new IllegalArgumentException("Feed item ID cannot be null");
-        }
-
-        if (userId == null) {
-            throw new IllegalArgumentException("User ID cannot be null");
-        }
+        if (feedItemId == null) throw new InvalidFeedItemException("feedItemId is required");
+        if (userId == null) throw new InvalidFeedItemException("userId is required");
 
         this.feedItemId = feedItemId;
         this.userId = userId;
