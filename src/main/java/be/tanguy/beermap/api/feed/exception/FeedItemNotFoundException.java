@@ -1,23 +1,10 @@
 package be.tanguy.beermap.api.feed.exception;
 
-import be.tanguy.beermap.api.common.web.ApiException;
 import org.springframework.http.HttpStatus;
-
 import java.util.UUID;
 
-public class FeedItemNotFoundException extends ApiException {
-
+public class FeedItemNotFoundException extends FeedDomainException {
     public FeedItemNotFoundException(UUID feedItemId) {
-        super("Feed item not found: " + feedItemId);
-    }
-
-    @Override
-    public HttpStatus getStatus() {
-        return HttpStatus.NOT_FOUND;
-    }
-
-    @Override
-    public String getCode() {
-        return "FEED_ITEM_NOT_FOUND";
+        super(HttpStatus.NOT_FOUND, "FEED_ITEM_NOT_FOUND", "Feed item not found: " + feedItemId);
     }
 }
