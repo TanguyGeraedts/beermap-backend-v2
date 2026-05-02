@@ -85,3 +85,26 @@ Accept: application/json
 > {%
     client.global.set("created_log_id", response.body.id);
 %}
+
+
+### =====================================================
+### DELETE /api/v1/draft-logs/me/batch
+### - Delete a specific list of drafts
+### =====================================================
+
+DELETE {{backend_base}}/api/v1/draft-logs/me/batch
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+[
+  "{{draft_id}}"
+]
+
+
+### =====================================================
+### DELETE /api/v1/draft-logs/me/all
+### - Delete ALL active drafts for current user
+### =====================================================
+
+DELETE {{backend_base}}/api/v1/draft-logs/me/all
+Authorization: Bearer {{access_token}}

@@ -14,6 +14,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping(ApiPaths.DraftLog.BASE)
@@ -42,5 +43,22 @@ public class DraftLogController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(DraftLogResponse.fromEntity(draftLog));
+    }
+
+    @DeleteMapping(ApiPaths.DraftLog.ME + "/batch")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteDrafts(
+            @AuthenticationPrincipal UserIdentity userIdentity,
+            @RequestBody List<UUID> draftIds
+    ) {
+        draftLogService.deleteDrafts(userIdentity, draftIds);
+    }
+
+    @DeleteMapping(ApiPaths.DraftLog.ME + "/all")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteAllActiveDrafts(
+            @AuthenticationPrincipal UserIdentity userIdentity
+    ) {
+        draftLogService.deleteAllDrafts(userIdentity);
     }
 }
