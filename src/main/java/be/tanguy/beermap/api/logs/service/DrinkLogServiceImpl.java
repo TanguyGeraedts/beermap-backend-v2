@@ -64,12 +64,14 @@ public class DrinkLogServiceImpl implements DrinkLogService {
         UUID userId = userProfileService.getCurrentUserId(identity);
         DrinkLog drinkLog = findOwnedLog(userId, logId);
 
-        drinkLog.update(
-                request.consumedAt(), request.quantity(), request.volumeMl(),
-                request.abvPercent(), request.category(), request.subType(),
-                request.rating(), request.description(), request.photoUrl(),
-                request.latitude(), request.longitude()
-        );
+        String resolvedCatalogName = null;
+        if (request.catalogItemId() != null) {
+            DrinkCatalogItem item = drinkCatalogItemRepository.findById(request.catalogItemId())
+                    .orElseThrow(() -> new DrinkCatalogItemNotFoundException(request.catalogItemId()));
+            resolvedCatalogName = item.getName();
+        }
+
+        drinkLog.update(request, resolvedCatalogName);
 
         return drinkLogRepository.save(drinkLog);
     }

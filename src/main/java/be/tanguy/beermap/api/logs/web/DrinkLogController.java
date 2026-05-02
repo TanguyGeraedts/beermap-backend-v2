@@ -6,7 +6,6 @@ import be.tanguy.beermap.api.logs.service.DrinkLogService;
 import be.tanguy.beermap.api.logs.web.dto.DrinkLogResponse;
 import be.tanguy.beermap.api.logs.web.dto.LogDrinkRequest;
 import be.tanguy.beermap.api.logs.web.dto.UpdateDrinkLogRequest;
-import be.tanguy.beermap.api.users.service.UserProfileService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

@@ -97,10 +97,9 @@ GET {{backend_base}}/api/v1/drink-logs/me/{{created_log_id}}
 Authorization: Bearer {{access_token}}
 Accept: application/json
 
-
 ### =====================================================
 ### PATCH /api/v1/drink-logs/me/{logId}
-### - Partially update a drink log
+### - Update drink identity: switch to catalog item
 ### =====================================================
 
 PATCH {{backend_base}}/api/v1/drink-logs/me/{{created_log_id}}
@@ -109,10 +108,41 @@ Content-Type: application/json
 Accept: application/json
 
 {
-  "rating": 10,
-  "description": "Actually, it was perfect!"
+  "catalogItemId": "{{catalog_id}}"
 }
 
+
+### =====================================================
+### PATCH /api/v1/drink-logs/me/{logId}
+### - Update drink identity: switch to custom drink
+### =====================================================
+
+PATCH {{backend_base}}/api/v1/drink-logs/me/{{created_log_id}}
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "customDrinkName": "Fixed Name IPA",
+  "category": "BEER",
+  "subType": "IPA",
+  "abvPercent": 6.5
+}
+
+
+### =====================================================
+### PATCH /api/v1/drink-logs/me/{logId}
+### - Update drink identity: fix custom name only
+### =====================================================
+
+PATCH {{backend_base}}/api/v1/drink-logs/me/{{created_log_id}}
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "customDrinkName": "Corrected Drink Name"
+}
 
 ### =====================================================
 ### DELETE /api/v1/drink-logs/me/{logId}

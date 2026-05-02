@@ -4,6 +4,7 @@ import be.tanguy.beermap.api.common.domain.Location;
 import be.tanguy.beermap.api.common.persistence.AbstractBaseObject;
 import be.tanguy.beermap.api.logs.exception.DrinkLogOwnershipException;
 import be.tanguy.beermap.api.logs.exception.InvalidConsumptionException;
+import be.tanguy.beermap.api.logs.web.dto.UpdateDrinkLogRequest;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
@@ -53,17 +54,21 @@ public class DrinkLog extends AbstractBaseObject {
         return log;
     }
 
-    public void update(
-            Instant consumedAt, Integer quantity, Integer volumeMl,
-            BigDecimal abvPercent, DrinkCategory category, String subType,
-            Integer rating, String description, String photoUrl,
-            Double latitude, Double longitude
-    ) {
-        identity.update(category, subType, abvPercent);
-        consumption.update(consumedAt, quantity, volumeMl, rating, description, photoUrl);
-
-        if (latitude != null || longitude != null) {
-            this.location = Location.of(latitude, longitude);
+    public void update(UpdateDrinkLogRequest request, String resolvedCatalogName) {
+        identity.updateIdentity(
+                request.catalogItemId(),
+                resolvedCatalogName,
+                request.customDrinkName(),
+                request.category(),
+                request.subType(),
+                request.abvPercent()
+        );
+        consumption.update(
+                request.consumedAt(), request.quantity(), request.volumeMl(),
+                request.rating(), request.description(), request.photoUrl()
+        );
+        if (request.latitude() != null || request.longitude() != null) {
+            this.location = Location.of(request.latitude(), request.longitude());
         }
     }
 

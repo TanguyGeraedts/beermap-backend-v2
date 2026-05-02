@@ -6,8 +6,11 @@ import jakarta.validation.constraints.Positive;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.UUID;
 
 public record UpdateDrinkLogRequest(
+        UUID catalogItemId,
+        @AllowedContent String customDrinkName,
         Instant consumedAt,
         @Positive(message = "Quantity must be positive")
         Integer quantity,

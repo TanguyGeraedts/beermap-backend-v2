@@ -80,6 +80,22 @@ public class DrinkIdentity {
         if (abvPercent != null) this.abvPercent = abvPercent;
     }
 
+    public void updateIdentity(UUID catalogItemId, String catalogItemName, String customDrinkName, DrinkCategory category, String subType, BigDecimal abvPercent) {
+        if (catalogItemId != null) {
+            this.catalogItemId = catalogItemId;
+            this.catalogItemName = catalogItemName;
+            this.customDrinkName = null;
+        } else if (customDrinkName != null && !customDrinkName.isBlank()) {
+            this.customDrinkName = customDrinkName.trim();
+            this.catalogItemId = null;
+            this.catalogItemName = null;
+        }
+
+        if (category != null) this.category = category;
+        if (subType != null) this.subType = normalizeNullable(subType);
+        if (abvPercent != null) this.abvPercent = abvPercent;
+    }
+
     public String getDisplayName() {
         return catalogItemId != null ? catalogItemName : customDrinkName;
     }
