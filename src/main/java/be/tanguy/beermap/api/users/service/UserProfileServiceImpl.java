@@ -95,6 +95,14 @@ public class UserProfileServiceImpl implements UserProfileService {
         return userProfile;
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public AccountType getAccountType(UUID userId) {
+        return userProfileRepository.findById(userId)
+                .map(UserProfile::getAccountType)
+                .orElseThrow(ProfileNotFoundException::new);
+    }
+
     private void applyBioUpdate(UserProfile userProfile, String bio) {
         if (bio == null) {
             return;

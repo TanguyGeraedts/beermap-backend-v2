@@ -19,5 +19,13 @@ public final class PlanLimits {
             throw new DraftLimitExceededException(limit);
         }
     }
+
+    /// ───────────── Draft Retention ─────────────
+    public static int maxDraftRetentionDays(AccountType type) {
+        return switch (type) {
+            case PREMIUM, ADMIN -> 30;
+            default -> 7;
+        };
+    }
 }
 

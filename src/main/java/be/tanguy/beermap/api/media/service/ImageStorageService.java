@@ -15,4 +15,6 @@ public interface ImageStorageService {
             String drinkLogId,
             String contentType
     );
+
+    void deleteImage(String key);
 }

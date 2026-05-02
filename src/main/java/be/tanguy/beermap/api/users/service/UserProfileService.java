@@ -1,6 +1,7 @@
 package be.tanguy.beermap.api.users.service;
 
 import be.tanguy.beermap.api.common.security.UserIdentity;
+import be.tanguy.beermap.api.users.domain.AccountType;
 import be.tanguy.beermap.api.users.domain.UserProfile;
 
 import java.util.UUID;
@@ -25,4 +26,6 @@ public interface UserProfileService {
             String avatarUrl,
             String discriminator
     );
+
+    AccountType getAccountType(UUID userId);
 }
