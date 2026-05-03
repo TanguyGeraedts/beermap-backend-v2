@@ -7,6 +7,11 @@ public final class ApiPaths {
     public static final String API = "/api";
     public static final String V1 = API + "/v1";
 
+    public static final class Meta {
+        public static final String BASE = V1 + "/meta";
+        public static final String CHANGELOG = "/changelog";
+        private Meta() {}
+    }
 
     public static final class Users {
         public static final String BASE = V1 + "/users";

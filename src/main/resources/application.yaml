@@ -1,12 +1,15 @@
 spring:
   application:
     name: api
+    version: "BETA 1.0.0"
 
   profiles:
     active: dev
 
   config:
-    import: optional:file:.env[.properties]
+    import:
+      - optional:file:.env[.properties]
+      - classpath:changelog.yml
 
 storage:
   r2:

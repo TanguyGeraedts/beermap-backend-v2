@@ -1,0 +1,21 @@
+### =====================================================
+### Variables
+### =====================================================
+@backend_base=http://localhost:8080
+
+### =====================================================
+### GET /api/v1/meta
+### - Get app version (no auth required)
+### =====================================================
+
+GET {{backend_base}}/api/v1/meta
+Accept: application/json
+
+
+### =====================================================
+### GET /api/v1/meta/changelog
+### - Get changelog (no auth required)
+### =====================================================
+
+GET {{backend_base}}/api/v1/meta/changelog
+Accept: application/json

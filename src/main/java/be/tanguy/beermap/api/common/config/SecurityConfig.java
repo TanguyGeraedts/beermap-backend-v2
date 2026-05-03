@@ -1,6 +1,7 @@
 package be.tanguy.beermap.api.common.config;
 
 import be.tanguy.beermap.api.common.security.JwtToUserIdentityConverter;
+import be.tanguy.beermap.api.common.web.ApiPaths;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -30,6 +31,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
+                        .requestMatchers(ApiPaths.Meta.BASE + "/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
