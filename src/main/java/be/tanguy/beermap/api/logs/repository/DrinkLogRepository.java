@@ -86,6 +86,17 @@ public interface DrinkLogRepository extends JpaRepository<DrinkLog, UUID> {
 
     @Query(value = """
             SELECT
+              l.category AS category,
+              COUNT(*) AS entries
+            FROM drink_log l
+            WHERE l.user_id = :userId
+            GROUP BY l.category
+            ORDER BY entries DESC, l.category ASC
+            """, nativeQuery = true)
+    List<Object[]> countEntriesByCategory(@Param("userId") UUID userId);
+
+    @Query(value = """
+            SELECT
               COALESCE(l.catalog_item_name, l.custom_drink_name) AS drink_name,
               l.category AS category,
               COALESCE(SUM(l.quantity), 0) AS drinks

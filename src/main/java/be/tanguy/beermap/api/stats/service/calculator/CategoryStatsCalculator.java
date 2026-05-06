@@ -21,8 +21,12 @@ public class CategoryStatsCalculator {
                 .stream()
                 .map(this::mapCategoryRow)
                 .toList();
+        List<CountByCategoryResponse> entriesByCategory = drinkLogRepository.countEntriesByCategory(userId)
+                .stream()
+                .map(this::mapCategoryRow)
+                .toList();
 
-        return new CategoryStatsResponse(drinksByCategory);
+        return new CategoryStatsResponse(drinksByCategory, entriesByCategory);
     }
 
     private CountByCategoryResponse mapCategoryRow(Object[] row) {
