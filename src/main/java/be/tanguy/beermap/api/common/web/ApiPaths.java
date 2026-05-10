@@ -32,6 +32,7 @@ public final class ApiPaths {
 
         public static final String PRESIGN_PROFILE_PICTURE = "/presign/profile-picture";
         public static final String PRESIGN_DRINK_LOG = "/presign/drink-log";
+        public static final String DELETE = "/delete";
 
         private Images() {}
     }

@@ -17,4 +17,6 @@ public interface ImageStorageService {
     );
 
     void deleteImage(String key);
+
+    void deleteImage(UserIdentity userIdentity, String key);
 }

@@ -7,6 +7,7 @@ import be.tanguy.beermap.api.media.web.dto.CreateUploadUrlRequest;
 import be.tanguy.beermap.api.media.web.dto.CreateUploadUrlResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,5 +39,14 @@ public class ImageController {
                 request.drinkLogId(),
                 request.contentType()
         );
+    }
+
+    @DeleteMapping(ApiPaths.Images.DELETE)
+    public ResponseEntity<Void> deleteImage(
+            @AuthenticationPrincipal UserIdentity userIdentity,
+            @RequestParam String key
+    ) {
+        imageStorageService.deleteImage(userIdentity, key);
+        return ResponseEntity.noContent().build();
     }
 }

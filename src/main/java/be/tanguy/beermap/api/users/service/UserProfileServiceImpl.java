@@ -1,6 +1,8 @@
 package be.tanguy.beermap.api.users.service;
 
+import be.tanguy.beermap.api.common.config.storage.StorageProperties;
 import be.tanguy.beermap.api.common.security.UserIdentity;
+import be.tanguy.beermap.api.media.service.ImageStorageService;
 import be.tanguy.beermap.api.users.domain.*;
 import be.tanguy.beermap.api.users.exception.*;
 import be.tanguy.beermap.api.users.repository.AuthIdentityRepository;
@@ -22,6 +24,8 @@ public class UserProfileServiceImpl implements UserProfileService {
 
     private final AuthIdentityRepository authIdentityRepository;
     private final UserProfileRepository userProfileRepository;
+    private final ImageStorageService imageStorageService;
+    private final StorageProperties storageProperties;
 
     @Override
     @Transactional
@@ -116,8 +120,21 @@ public class UserProfileServiceImpl implements UserProfileService {
             return;
         }
 
-        userProfile.updateAvatarUrl(normalizeAvatarUrl(avatarUrl));
+        String normalized = normalizeAvatarUrl(avatarUrl);
+
+        if (normalized == null) {
+            String currentAvatarUrl = userProfile.getInfo().getAvatarUrl();
+            if (currentAvatarUrl != null) {
+                String key = extractKeyFromUrl(currentAvatarUrl);
+                imageStorageService.deleteImage(key);
+                userProfile.updateAvatarUrl(null);
+            }
+            return;
+        }
+
+        userProfile.updateAvatarUrl(normalized);
     }
+
 
     private void applyUsernameUpdate(UserProfile userProfile, String username) {
         if (username == null || username.isBlank()) {
@@ -226,5 +243,10 @@ public class UserProfileServiceImpl implements UserProfileService {
         }
 
         return trimmed;
+    }
+
+    private String extractKeyFromUrl(String publicUrl) {
+        String baseUrl = storageProperties.publicBaseUrl();
+        return publicUrl.replace(baseUrl + "/", "");
     }
 }

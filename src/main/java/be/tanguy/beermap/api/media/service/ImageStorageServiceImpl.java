@@ -53,6 +53,20 @@ public class ImageStorageServiceImpl implements ImageStorageService {
         s3Client.deleteObject(deleteRequest);
     }
 
+    @Override
+    public void deleteImage(UserIdentity userIdentity, String key) {
+        String expectedPrefix = "users/" + userIdentity.subject() + "/";
+        if (!key.startsWith(expectedPrefix)) {
+            throw new IllegalArgumentException("Unauthorized to delete this image");
+        }
+
+        DeleteObjectRequest deleteRequest = DeleteObjectRequest.builder()
+                .bucket(storageProperties.bucketName())
+                .key(key)
+                .build();
+        s3Client.deleteObject(deleteRequest);
+    }
+
     private CreateUploadUrlResponse createPresignedUpload(String key, String contentType) {
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                 .bucket(storageProperties.bucketName())
