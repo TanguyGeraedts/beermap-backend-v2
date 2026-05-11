@@ -49,7 +49,12 @@ public class FriendshipServiceImpl implements FriendshipService {
                 throw new FriendshipBlockedException();
             }
 
-            throw new FriendshipAlreadyExistsException();
+            if (existing.isPending() || existing.isAccepted()) {
+                throw new FriendshipAlreadyExistsException();
+            }
+
+            existing.reopen(requesterId, addresseeId);
+            return friendshipRepository.save(existing);
         }
 
         Friendship friendship = Friendship.create(requesterId, addresseeId);

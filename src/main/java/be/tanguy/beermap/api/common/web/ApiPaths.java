@@ -69,8 +69,8 @@ public final class ApiPaths {
         public static final String RESEND = "/resend";
         public static final String UNBLOCK = "/unblock";
 
-        public static final String INCOMING = "/incoming";
-        public static final String OUTGOING = "/outgoing";
+        public static final String INCOMING = "/requests/received";
+        public static final String OUTGOING = "/requests/sent";
         public static final String FRIENDS = "/friends";
         public static final String BLOCKED = "/blocked";
 

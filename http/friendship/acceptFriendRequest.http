@@ -72,5 +72,5 @@ Authorization: Bearer {{access_token}}
 ### Get Pending Friend Requests
 ### =====================================================
 
-GET {{backend_base}}/api/v1/friendships/pending
+GET {{backend_base}}/api/v1/friendships/requests/received
 Authorization: Bearer {{access_token}}
