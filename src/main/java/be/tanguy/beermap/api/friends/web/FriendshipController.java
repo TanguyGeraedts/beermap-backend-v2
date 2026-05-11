@@ -116,40 +116,28 @@ public class FriendshipController {
     public List<FriendshipResponse> getPendingIncomingRequests(
             @AuthenticationPrincipal UserIdentity userIdentity
     ) {
-        return friendshipService.getPendingIncomingRequests(userIdentity)
-                .stream()
-                .map(FriendshipResponse::from)
-                .toList();
+        return friendshipService.getPendingIncomingRequests(userIdentity);
     }
 
     @GetMapping(ApiPaths.Friendships.OUTGOING)
     public List<FriendshipResponse> getPendingOutgoingRequests(
             @AuthenticationPrincipal UserIdentity userIdentity
     ) {
-        return friendshipService.getPendingOutgoingRequests(userIdentity)
-                .stream()
-                .map(FriendshipResponse::from)
-                .toList();
+        return friendshipService.getPendingOutgoingRequests(userIdentity);
     }
 
     @GetMapping(ApiPaths.Friendships.FRIENDS)
     public List<FriendshipResponse> getAcceptedFriendships(
             @AuthenticationPrincipal UserIdentity userIdentity
     ) {
-        return friendshipService.getAcceptedFriendships(userIdentity)
-                .stream()
-                .map(FriendshipResponse::from)
-                .toList();
+        return friendshipService.getAcceptedFriendships(userIdentity);
     }
 
     @GetMapping(ApiPaths.Friendships.BLOCKED)
     public List<FriendshipResponse> getBlockedUsers(
             @AuthenticationPrincipal UserIdentity userIdentity
     ) {
-        return friendshipService.getBlockedUsers(userIdentity)
-                .stream()
-                .map(FriendshipResponse::from)
-                .toList();
+        return friendshipService.getBlockedUsers(userIdentity);
     }
 
     @GetMapping(ApiPaths.Friendships.BY_USER)
@@ -157,8 +145,6 @@ public class FriendshipController {
             @AuthenticationPrincipal UserIdentity userIdentity,
             @PathVariable UUID userId
     ) {
-        return FriendshipResponse.from(
-                friendshipService.getFriendship(userIdentity, userId)
-        );
+        return friendshipService.getFriendship(userIdentity, userId);
     }
 }

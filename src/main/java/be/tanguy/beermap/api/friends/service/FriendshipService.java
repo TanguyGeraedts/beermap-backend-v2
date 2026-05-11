@@ -2,6 +2,7 @@ package be.tanguy.beermap.api.friends.service;
 
 import be.tanguy.beermap.api.common.security.UserIdentity;
 import be.tanguy.beermap.api.friends.domain.Friendship;
+import be.tanguy.beermap.api.friends.web.dto.FriendshipResponse;
 
 import java.util.List;
 import java.util.UUID;
@@ -24,13 +25,13 @@ public interface FriendshipService {
 
     Friendship unblockUser(UserIdentity userIdentity, UUID otherUserId);
 
-    List<Friendship> getPendingIncomingRequests(UserIdentity userIdentity);
+    List<FriendshipResponse> getPendingIncomingRequests(UserIdentity userIdentity);
 
-    List<Friendship> getPendingOutgoingRequests(UserIdentity userIdentity);
+    List<FriendshipResponse> getPendingOutgoingRequests(UserIdentity userIdentity);
 
-    List<Friendship> getAcceptedFriendships(UserIdentity userIdentity);
+    List<FriendshipResponse> getAcceptedFriendships(UserIdentity userIdentity);
 
-    List<Friendship> getBlockedUsers(UserIdentity userIdentity);
+    List<FriendshipResponse> getBlockedUsers(UserIdentity userIdentity);
 
-    Friendship getFriendship(UserIdentity userIdentity, UUID otherUserId);
+    FriendshipResponse getFriendship(UserIdentity userIdentity, UUID otherUserId);
 }

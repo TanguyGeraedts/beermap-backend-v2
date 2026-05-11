@@ -6,10 +6,12 @@ import be.tanguy.beermap.api.friends.domain.FriendshipStatus;
 import be.tanguy.beermap.api.friends.event.FriendshipAcceptedEvent;
 import be.tanguy.beermap.api.friends.exception.*;
 import be.tanguy.beermap.api.friends.repository.FriendshipRepository;
+import be.tanguy.beermap.api.friends.web.dto.FriendshipResponse;
 import be.tanguy.beermap.api.users.domain.AuthIdentity;
 import be.tanguy.beermap.api.users.domain.UserProfile;
 import be.tanguy.beermap.api.users.domain.UserProfileInfo;
 import be.tanguy.beermap.api.users.exception.ProfileNotFoundException;
+import be.tanguy.beermap.api.users.exception.UserProfileNotFoundException;
 import be.tanguy.beermap.api.users.repository.AuthIdentityRepository;
 import be.tanguy.beermap.api.users.repository.UserProfileRepository;
 import lombok.RequiredArgsConstructor;
@@ -212,50 +214,61 @@ public class FriendshipServiceImpl implements FriendshipService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Friendship> getPendingIncomingRequests(UserIdentity userIdentity) {
+    public List<FriendshipResponse> getPendingIncomingRequests(UserIdentity userIdentity) {
         UUID currentUserId = getCurrentUserId(userIdentity);
-        return friendshipRepository.findAllByAddresseeIdAndStatus(currentUserId, FriendshipStatus.PENDING);
+        return friendshipRepository.findAllByAddresseeIdAndStatus(currentUserId, FriendshipStatus.PENDING)
+                .stream()
+                .map(f -> FriendshipResponse.from(f, resolveOtherUser(f, currentUserId)))
+                .toList();
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Friendship> getPendingOutgoingRequests(UserIdentity userIdentity) {
+    public List<FriendshipResponse> getPendingOutgoingRequests(UserIdentity userIdentity) {
         UUID currentUserId = getCurrentUserId(userIdentity);
-        return friendshipRepository.findAllByRequesterIdAndStatus(currentUserId, FriendshipStatus.PENDING);
+        return friendshipRepository.findAllByRequesterIdAndStatus(currentUserId, FriendshipStatus.PENDING)
+                .stream()
+                .map(f -> FriendshipResponse.from(f, resolveOtherUser(f, currentUserId)))
+                .toList();
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Friendship> getAcceptedFriendships(UserIdentity userIdentity) {
+    public List<FriendshipResponse> getAcceptedFriendships(UserIdentity userIdentity) {
         UUID currentUserId = getCurrentUserId(userIdentity);
-        return friendshipRepository.findAllByUserIdAndStatus(currentUserId, FriendshipStatus.ACCEPTED);
+        return friendshipRepository.findAllByUserIdAndStatus(currentUserId, FriendshipStatus.ACCEPTED)
+                .stream()
+                .map(f -> FriendshipResponse.from(f, resolveOtherUser(f, currentUserId)))
+                .toList();
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Friendship> getBlockedUsers(UserIdentity userIdentity) {
+    public List<FriendshipResponse> getBlockedUsers(UserIdentity userIdentity) {
         UUID currentUserId = getCurrentUserId(userIdentity);
-        return friendshipRepository.findAllByRequesterIdAndStatus(currentUserId, FriendshipStatus.BLOCKED);
+        return friendshipRepository.findAllByRequesterIdAndStatus(currentUserId, FriendshipStatus.BLOCKED)
+                .stream()
+                .map(f -> FriendshipResponse.from(f, resolveOtherUser(f, currentUserId)))
+                .toList();
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Friendship getFriendship(UserIdentity userIdentity, UUID otherUserId) {
+    public FriendshipResponse getFriendship(UserIdentity userIdentity, UUID otherUserId) {
         UUID currentUserId = getCurrentUserId(userIdentity);
-
-        return friendshipRepository
+        Friendship f = friendshipRepository
                 .findByRequesterIdAndAddresseeIdOrRequesterIdAndAddresseeId(
                         currentUserId, otherUserId,
                         otherUserId, currentUserId
                 )
                 .orElseThrow(() -> new InvalidFriendshipStateException("Friendship not found"));
+        return FriendshipResponse.from(f, resolveOtherUser(f, currentUserId));
     }
 
     // --- Helpers ---
 
     private UUID resolveUserId(String username, String discriminator) {
         String normalizedUsername = UserProfileInfo.normalizeUsername(username);
-
         return userProfileRepository
                 .findByInfo_UsernameNormalizedAndInfo_Discriminator(normalizedUsername, discriminator)
                 .map(UserProfile::getId)
@@ -263,12 +276,16 @@ public class FriendshipServiceImpl implements FriendshipService {
     }
 
     private UUID getCurrentUserId(UserIdentity userIdentity) {
-        UserProfile userProfile = authIdentityRepository
+        return authIdentityRepository
                 .findByIssuerAndSubject(userIdentity.issuer(), userIdentity.subject())
-                .map(AuthIdentity::getUserProfile)
+                .map(ai -> ai.getUserProfile().getId())
                 .orElseThrow(ProfileNotFoundException::new);
+    }
 
-        return userProfile.getId();
+    private UserProfile resolveOtherUser(Friendship friendship, UUID currentUserId) {
+        UUID otherId = friendship.getOtherUserId(currentUserId);
+        return userProfileRepository.findById(otherId)
+                .orElseThrow(() -> new UserProfileNotFoundException(otherId));
     }
 
     private void ensureUserExists(UUID userId) {
@@ -281,7 +298,6 @@ public class FriendshipServiceImpl implements FriendshipService {
         if (requesterId == null || addresseeId == null) {
             throw new IllegalArgumentException("User IDs cannot be null");
         }
-
         if (requesterId.equals(addresseeId)) {
             throw new CannotFriendYourselfException();
         }
