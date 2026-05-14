@@ -162,7 +162,8 @@ public class FeedItemServiceImpl implements FeedItemService {
                 userProfile.getId(),
                 userProfile.getInfo().getUsername(),
                 userProfile.getInfo().getDiscriminator(),
-                userProfile.getInfo().getAvatarUrl()
+                userProfile.getInfo().getAvatarUrl(),
+                userProfile.getAccountType()
         );
     }
 
