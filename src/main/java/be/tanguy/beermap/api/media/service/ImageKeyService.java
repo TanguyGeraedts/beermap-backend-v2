@@ -14,26 +14,14 @@ public class ImageKeyService {
             "image/webp"
     );
 
-    public String buildProfilePictureKey(String userId, String contentType) {
+    public String buildUniversalKey(String userId, String folder, String contentType) {
         validateContentType(contentType);
 
         String extension = resolveExtension(contentType);
         String fileId = UUID.randomUUID().toString();
 
-        return "users/" + userId + "/profile-picture/" + fileId + extension;
-    }
-
-    public String buildDrinkLogKey(String userId, String drinkLogId, String contentType) {
-        validateContentType(contentType);
-
-        if (drinkLogId == null || drinkLogId.isBlank()) {
-            throw new IllegalArgumentException("Drink log id is required");
-        }
-
-        String extension = resolveExtension(contentType);
-        String fileId = UUID.randomUUID().toString();
-
-        return "users/" + userId + "/drink-logs/" + drinkLogId + "/" + fileId + extension;
+        // Format: users/{userId}/{folder}/{uuid}.{ext}
+        return String.format("users/%s/%s/%s%s", userId, folder, fileId, extension);
     }
 
     private void validateContentType(String contentType) {

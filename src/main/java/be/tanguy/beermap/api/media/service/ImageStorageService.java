@@ -12,7 +12,6 @@ public interface ImageStorageService {
 
     CreateUploadUrlResponse createDrinkLogUploadUrl(
             UserIdentity userIdentity,
-            String drinkLogId,
             String contentType
     );
 

@@ -70,7 +70,8 @@ Accept: application/json
   "rating": 9,
   "description": "Found this at a local market",
   "latitude": 51.2194,
-  "longitude": 4.4025
+  "longitude": 4.4025,
+  "photoUrl": "temp"
 }
 
 > {%

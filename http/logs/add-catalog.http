@@ -60,6 +60,15 @@ Accept: application/json
 
 
 ### =====================================================
+### GET /api/v1/catalog/drinks/search
+### - Search the catalog item by name
+### =====================================================
+
+GET {{backend_base}}/api/v1/catalog/drinks/search/name?query=Duvel
+Authorization: Bearer {{access_token}}
+Accept: application/json
+
+### =====================================================
 ### PUT /api/v1/catalog/drinks/{id}
 ### - Update an existing catalog item
 ### =====================================================

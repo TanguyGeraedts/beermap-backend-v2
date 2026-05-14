@@ -30,17 +30,16 @@ public class ImageStorageServiceImpl implements ImageStorageService {
             UserIdentity userIdentity,
             String contentType
     ) {
-        String key = imageKeyService.buildProfilePictureKey(userIdentity.subject(), contentType);
+        String key = imageKeyService.buildUniversalKey(userIdentity.subject(), "profile-picture" ,contentType);
         return createPresignedUpload(key, contentType);
     }
 
     @Override
     public CreateUploadUrlResponse createDrinkLogUploadUrl(
             UserIdentity userIdentity,
-            String drinkLogId,
             String contentType
     ) {
-        String key = imageKeyService.buildDrinkLogKey(userIdentity.subject(), drinkLogId, contentType);
+        String key = imageKeyService.buildUniversalKey(userIdentity.subject(), "log" ,contentType);
         return createPresignedUpload(key, contentType);
     }
 

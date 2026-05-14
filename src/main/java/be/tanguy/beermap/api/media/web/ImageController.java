@@ -36,7 +36,6 @@ public class ImageController {
     ) {
         return imageStorageService.createDrinkLogUploadUrl(
                 userIdentity,
-                request.drinkLogId(),
                 request.contentType()
         );
     }
