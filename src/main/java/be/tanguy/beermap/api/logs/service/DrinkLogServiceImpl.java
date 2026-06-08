@@ -21,6 +21,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -88,6 +91,21 @@ public class DrinkLogServiceImpl implements DrinkLogService {
     public Page<DrinkLog> getTimeline(UserIdentity identity, Pageable pageable) {
         UUID userId = userProfileService.getCurrentUserId(identity);
         return drinkLogRepository.findByUserIdOrderByConsumptionConsumedAtDesc(userId, pageable);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<DrinkLog> getDrinksFromDay(UserIdentity identity, LocalDate date) {
+        UUID userId = userProfileService.getCurrentUserId(identity);
+
+        Instant startOfDay = date.atStartOfDay(java.time.ZoneOffset.UTC).toInstant();
+        Instant endOfDay = date.plusDays(1).atStartOfDay(java.time.ZoneOffset.UTC).toInstant();
+
+        return drinkLogRepository.findByUserIdAndConsumptionConsumedAtBetweenOrderByConsumptionConsumedAtDesc(
+                userId,
+                startOfDay,
+                endOfDay
+        );
     }
 
     @Override

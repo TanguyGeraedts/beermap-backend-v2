@@ -7,6 +7,9 @@ import be.tanguy.beermap.api.logs.web.dto.UpdateDrinkLogRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 public interface DrinkLogService {
@@ -16,6 +19,8 @@ public interface DrinkLogService {
     DrinkLog logFromDraft(UserIdentity identity, UUID draftId, LogDrinkRequest request);
 
     Page<DrinkLog> getTimeline(UserIdentity identity, Pageable pageable);
+
+    List<DrinkLog> getDrinksFromDay(UserIdentity identity, LocalDate date);
 
     DrinkLog getLog(UserIdentity identity, UUID logId);
 

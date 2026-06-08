@@ -16,6 +16,12 @@ import java.util.UUID;
 @Repository
 public interface DrinkLogRepository extends JpaRepository<DrinkLog, UUID> {
 
+    List<DrinkLog> findByUserIdAndConsumptionConsumedAtBetweenOrderByConsumptionConsumedAtDesc(
+            UUID userId,
+            Instant fromInclusive,
+            Instant toExclusive
+    );
+
     Page<DrinkLog> findByUserIdOrderByConsumptionConsumedAtDesc(UUID userId, Pageable pageable);
 
     List<DrinkLog> findTop20ByUserIdOrderByConsumptionConsumedAtDesc(UUID userId);
