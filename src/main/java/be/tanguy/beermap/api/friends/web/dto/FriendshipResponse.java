@@ -4,6 +4,7 @@ import be.tanguy.beermap.api.friends.domain.Friendship;
 import be.tanguy.beermap.api.friends.domain.FriendshipStatus;
 import be.tanguy.beermap.api.users.domain.AccountType;
 import be.tanguy.beermap.api.users.domain.UserProfile;
+import be.tanguy.beermap.api.users.web.dto.UserSummary;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -18,13 +19,6 @@ public record FriendshipResponse(
         Instant updatedAt,
         UserSummary friend
 ) {
-    public record UserSummary(
-            UUID id,
-            String username,
-            String discriminator,
-            String avatarUrl,
-            AccountType accountType
-    ) {}
 
     public static FriendshipResponse from(Friendship friendship) {
         return from(friendship, null);

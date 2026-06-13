@@ -109,4 +109,11 @@ public final class ApiPaths {
 
         private Feed() {}
     }
+
+    public static final class Map {
+        public static final String BASE = V1 + "/map";
+        public static final String PINS = "/pins";
+
+        private Map() {}
+    }
 }
