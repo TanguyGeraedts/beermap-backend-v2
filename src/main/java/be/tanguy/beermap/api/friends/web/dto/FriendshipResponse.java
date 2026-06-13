@@ -2,6 +2,7 @@ package be.tanguy.beermap.api.friends.web.dto;
 
 import be.tanguy.beermap.api.friends.domain.Friendship;
 import be.tanguy.beermap.api.friends.domain.FriendshipStatus;
+import be.tanguy.beermap.api.users.domain.AccountType;
 import be.tanguy.beermap.api.users.domain.UserProfile;
 
 import java.time.Instant;
@@ -15,16 +16,16 @@ public record FriendshipResponse(
         Instant respondedAt,
         Instant createdAt,
         Instant updatedAt,
-        UserSummary friend  // ← new
+        UserSummary friend
 ) {
     public record UserSummary(
             UUID id,
             String username,
             String discriminator,
-            String avatarUrl
+            String avatarUrl,
+            AccountType accountType
     ) {}
 
-    // Keep the simple factory for cases where you don't have the other user
     public static FriendshipResponse from(Friendship friendship) {
         return from(friendship, null);
     }
@@ -34,7 +35,8 @@ public record FriendshipResponse(
                 friend.getId(),
                 friend.getInfo().getUsername(),
                 friend.getInfo().getDiscriminator(),
-                friend.getInfo().getAvatarUrl()
+                friend.getInfo().getAvatarUrl(),
+                friend.getAccountType()
         );
 
         return new FriendshipResponse(
