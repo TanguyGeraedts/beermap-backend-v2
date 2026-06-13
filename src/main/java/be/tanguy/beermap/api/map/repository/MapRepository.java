@@ -13,7 +13,7 @@ import java.util.UUID;
 @Repository
 public interface MapRepository extends JpaRepository<DrinkLog, UUID> {
 
-    /// Private / Friends
+    /// Mine / Friends
     @Query(value = """
             SELECT
               dl.id                                        AS logId,
@@ -33,25 +33,25 @@ public interface MapRepository extends JpaRepository<DrinkLog, UUID> {
               dl.consumed_at                               AS consumedAt
             FROM drink_log dl
             JOIN user_profiles up ON up.id = dl.user_id
-            WHERE dl.latitude  IS NOT NULL
+            WHERE dl.latitude IS NOT NULL
               AND dl.longitude IS NOT NULL
-              AND dl.latitude  BETWEEN :minLat AND :maxLat
+              AND dl.latitude BETWEEN :minLat AND :maxLat
               AND dl.longitude BETWEEN :minLon AND :maxLon
               AND dl.user_id IN :userIds
-              AND (:from IS NULL OR dl.consumed_at >= :from)
-              AND (:to   IS NULL OR dl.consumed_at <= :to)
+              AND (CAST(:from AS timestamptz) IS NULL OR dl.consumed_at >= CAST(:from AS timestamptz))
+              AND (CAST(:to AS timestamptz)   IS NULL OR dl.consumed_at <= CAST(:to AS timestamptz))
             ORDER BY dl.consumed_at DESC
             LIMIT :limit
             """, nativeQuery = true)
     List<MapPinProjection> findMapPinsForUsers(
-            @Param("userIds") List<UUID>   userIds,
-            @Param("minLat")  double       minLat,
-            @Param("minLon")  double       minLon,
-            @Param("maxLat")  double       maxLat,
-            @Param("maxLon")  double       maxLon,
-            @Param("from")    Instant      from,
-            @Param("to")      Instant      to,
-            @Param("limit")   int          limit
+            @Param("userIds") List<UUID> userIds,
+            @Param("minLat")  double     minLat,
+            @Param("minLon")  double     minLon,
+            @Param("maxLat")  double     maxLat,
+            @Param("maxLon")  double     maxLon,
+            @Param("from")    Instant    from,
+            @Param("to")      Instant    to,
+            @Param("limit")   int        limit
     );
 
     @Query(value = """
@@ -73,14 +73,14 @@ public interface MapRepository extends JpaRepository<DrinkLog, UUID> {
               dl.consumed_at                               AS consumedAt
             FROM drink_log dl
             JOIN user_profiles up ON up.id = dl.user_id
-            WHERE dl.latitude  IS NOT NULL
+            WHERE dl.latitude IS NOT NULL
               AND dl.longitude IS NOT NULL
-              AND dl.latitude  BETWEEN :minLat AND :maxLat
+              AND dl.latitude BETWEEN :minLat AND :maxLat
               AND dl.longitude BETWEEN :minLon AND :maxLon
               AND dl.user_id IN :userIds
               AND dl.category IN :categories
-              AND (:from IS NULL OR dl.consumed_at >= :from)
-              AND (:to   IS NULL OR dl.consumed_at <= :to)
+              AND (CAST(:from AS timestamptz) IS NULL OR dl.consumed_at >= CAST(:from AS timestamptz))
+              AND (CAST(:to AS timestamptz)   IS NULL OR dl.consumed_at <= CAST(:to AS timestamptz))
             ORDER BY dl.consumed_at DESC
             LIMIT :limit
             """, nativeQuery = true)
@@ -116,23 +116,23 @@ public interface MapRepository extends JpaRepository<DrinkLog, UUID> {
               dl.consumed_at                               AS consumedAt
             FROM drink_log dl
             JOIN user_profiles up ON up.id = dl.user_id
-            WHERE dl.latitude  IS NOT NULL
+            WHERE dl.latitude IS NOT NULL
               AND dl.longitude IS NOT NULL
-              AND dl.latitude  BETWEEN :minLat AND :maxLat
+              AND dl.latitude BETWEEN :minLat AND :maxLat
               AND dl.longitude BETWEEN :minLon AND :maxLon
-              AND (:from IS NULL OR dl.consumed_at >= :from)
-              AND (:to   IS NULL OR dl.consumed_at <= :to)
+              AND (CAST(:from AS timestamptz) IS NULL OR dl.consumed_at >= CAST(:from AS timestamptz))
+              AND (CAST(:to AS timestamptz)   IS NULL OR dl.consumed_at <= CAST(:to AS timestamptz))
             ORDER BY dl.consumed_at DESC
             LIMIT :limit
             """, nativeQuery = true)
     List<MapPinProjection> findMapPinsForAll(
-            @Param("minLat")  double  minLat,
-            @Param("minLon")  double  minLon,
-            @Param("maxLat")  double  maxLat,
-            @Param("maxLon")  double  maxLon,
-            @Param("from")    Instant from,
-            @Param("to")      Instant to,
-            @Param("limit")   int     limit
+            @Param("minLat") double  minLat,
+            @Param("minLon") double  minLon,
+            @Param("maxLat") double  maxLat,
+            @Param("maxLon") double  maxLon,
+            @Param("from")   Instant from,
+            @Param("to")     Instant to,
+            @Param("limit")  int     limit
     );
 
     @Query(value = """
@@ -154,13 +154,13 @@ public interface MapRepository extends JpaRepository<DrinkLog, UUID> {
               dl.consumed_at                               AS consumedAt
             FROM drink_log dl
             JOIN user_profiles up ON up.id = dl.user_id
-            WHERE dl.latitude  IS NOT NULL
+            WHERE dl.latitude IS NOT NULL
               AND dl.longitude IS NOT NULL
-              AND dl.latitude  BETWEEN :minLat AND :maxLat
+              AND dl.latitude BETWEEN :minLat AND :maxLat
               AND dl.longitude BETWEEN :minLon AND :maxLon
               AND dl.category IN :categories
-              AND (:from IS NULL OR dl.consumed_at >= :from)
-              AND (:to   IS NULL OR dl.consumed_at <= :to)
+              AND (CAST(:from AS timestamptz) IS NULL OR dl.consumed_at >= CAST(:from AS timestamptz))
+              AND (CAST(:to AS timestamptz)   IS NULL OR dl.consumed_at <= CAST(:to AS timestamptz))
             ORDER BY dl.consumed_at DESC
             LIMIT :limit
             """, nativeQuery = true)
