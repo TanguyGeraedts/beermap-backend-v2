@@ -1,5 +1,6 @@
 package be.tanguy.beermap.api.logs.service;
 
+import be.tanguy.beermap.api.common.domain.Location;
 import be.tanguy.beermap.api.common.security.UserIdentity;
 import be.tanguy.beermap.api.logs.domain.DraftLog;
 import be.tanguy.beermap.api.logs.domain.DraftStatus;
@@ -39,10 +40,13 @@ public class DraftLogServiceImpl implements DraftLogService {
         long activeCount = draftLogRepository.countByUserIdAndStatus(currentUser.getId(), DraftStatus.ACTIVE);
         PlanLimits.verifyActiveDraftLimit(currentUser.getAccountType(), activeCount);
 
+        Location location = new Location(request.latitude(), request.longitude());
+
         DraftLog draftLog = DraftLog.createDraft(
                 currentUser.getId(),
                 request.photoUrl(),
-                request.capturedAt()
+                request.capturedAt(),
+                location
         );
 
         return draftLogRepository.save(draftLog);

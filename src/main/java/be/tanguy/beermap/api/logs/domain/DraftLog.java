@@ -1,5 +1,6 @@
 package be.tanguy.beermap.api.logs.domain;
 
+import be.tanguy.beermap.api.common.domain.Location;
 import be.tanguy.beermap.api.common.persistence.AbstractBaseObject;
 import be.tanguy.beermap.api.logs.exception.InvalidCapturedAtException;
 import be.tanguy.beermap.api.logs.exception.InvalidDraftStateException;
@@ -38,11 +39,15 @@ public class DraftLog extends AbstractBaseObject {
     @Column(name = "status", nullable = false, length = 20)
     private DraftStatus status;
 
-    public static DraftLog createDraft(UUID userId, String photoUrl, LocalDateTime capturedAt) {
+    @Embedded
+    private Location location;
+
+    public static DraftLog createDraft(UUID userId, String photoUrl, LocalDateTime capturedAt, Location location) {
         DraftLog draft = new DraftLog();
 
         draft.userId = userId;
         draft.photoUrl = photoUrl;
+        draft.location = location;
 
         draft.validateCapturedAt(capturedAt);
 
@@ -70,6 +75,10 @@ public class DraftLog extends AbstractBaseObject {
 
     public void updatePhoto(String photoUrl) {
         this.photoUrl = photoUrl;
+    }
+
+    public void updateLocation(Location location) {
+        this.location = location;
     }
 
     public boolean isActive() {
