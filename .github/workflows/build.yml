@@ -21,5 +21,5 @@ jobs:
       - name: Build & push Docker image
         run: |
           echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-          docker build -t ghcr.io/TanguyGeraedts/beermap-api:latest .
-          docker push ghcr.io/TanguyGeraedts/beermap-api:latest
+          docker build -t ghcr.io/tanguygeraedts/beermap-backend-v2:latest .
+          docker push ghcr.io/tanguygeraedts/beermap-backend-v2:latest
