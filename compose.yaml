@@ -28,5 +28,19 @@ services:
     ports:
       - "${KEYCLOAK_PORT}:8080"
 
+  api:
+    image: ghcr.io/yourusername/beermap-api:latest
+    container_name: beermap-api-v2
+    restart: unless-stopped
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "${API_PORT}:8080"
+    depends_on:
+      - postgres
+      - keycloak
+
 volumes:
   postgres_data:
