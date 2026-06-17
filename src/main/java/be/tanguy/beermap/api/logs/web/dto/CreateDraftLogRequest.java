@@ -1,10 +1,11 @@
 package be.tanguy.beermap.api.logs.web.dto;
 
-import java.time.LocalDateTime;
+
+import java.time.Instant;
 
 public record CreateDraftLogRequest(
         String photoUrl,
-        LocalDateTime capturedAt,
+        Instant capturedAt,
         Double latitude,
         Double longitude
 ) {

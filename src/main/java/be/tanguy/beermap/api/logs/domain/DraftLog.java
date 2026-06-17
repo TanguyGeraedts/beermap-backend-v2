@@ -10,7 +10,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 
@@ -30,7 +30,7 @@ public class DraftLog extends AbstractBaseObject {
     private UUID userId;
 
     @Column(name = "captured_at", nullable = false)
-    private LocalDateTime capturedAt;
+    private Instant capturedAt;
 
     @Column(name = "photo_url", length = 2048)
     private String photoUrl;
@@ -42,7 +42,7 @@ public class DraftLog extends AbstractBaseObject {
     @Embedded
     private Location location;
 
-    public static DraftLog createDraft(UUID userId, String photoUrl, LocalDateTime capturedAt, Location location) {
+    public static DraftLog createDraft(UUID userId, String photoUrl, Instant capturedAt, Location location) {
         DraftLog draft = new DraftLog();
 
         draft.userId = userId;
@@ -51,7 +51,7 @@ public class DraftLog extends AbstractBaseObject {
 
         draft.validateCapturedAt(capturedAt);
 
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
         draft.capturedAt = capturedAt != null ? capturedAt : now;
 
         draft.status = DraftStatus.ACTIVE;
@@ -89,8 +89,8 @@ public class DraftLog extends AbstractBaseObject {
         return this.status == DraftStatus.CONSUMED;
     }
 
-    private void validateCapturedAt(LocalDateTime capturedAt) {
-        LocalDateTime now = LocalDateTime.now();
+    private void validateCapturedAt(Instant capturedAt) { // Modified parameter
+        Instant now = Instant.now();
 
         if (capturedAt != null && capturedAt.isAfter(now)) {
             throw new InvalidCapturedAtException(capturedAt);

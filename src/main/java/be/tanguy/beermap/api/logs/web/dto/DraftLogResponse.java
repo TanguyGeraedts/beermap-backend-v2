@@ -11,7 +11,7 @@ import java.util.UUID;
 public record DraftLogResponse(
         UUID id,
         UUID userId,
-        LocalDateTime capturedAt,
+        Instant capturedAt,
         String photoUrl,
         DraftStatus status,
         Instant createdAt,
